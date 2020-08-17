@@ -15,8 +15,11 @@ class Configuration implements ConfigurationInterface
             ->children()
                 // Entity configuration for EntityNormalizer
                 ->arrayNode('entity')
+                ->addDefaultsIfNotSet()
                 ->children()
-                    ->integerNode('namespace')->end()
+                    ->scalarNode('namespace')
+                        ->defaultValue("App\\Entity\\")
+                    ->end()
                 ->end()
             ->end() // entity
         ->end();
