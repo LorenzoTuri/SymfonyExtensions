@@ -13,7 +13,7 @@ class Configuration implements ConfigurationInterface
 
         $treeBuilder->getRootNode()
             ->children()
-                // Entity configuration for DoctrineDeserializer
+                // Entity configuration for EntityNormalizer
                 ->arrayNode('entity')
                 ->children()
                     ->integerNode('namespace')->end()
