@@ -2,6 +2,7 @@
 
 namespace Lturi\SymfonyExtensions\Services;
 
+use Lturi\SymfonyExtensions\Classes\Constants;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,7 +24,7 @@ class HttpExceptionService
     {
         $this->router = $router;
         $this->container = $container;
-        $this->apiPathSegment = $container->getParameter("lturi_symfony_extensions.api.path");
+        $this->apiPathSegment = $container->getParameter(Constants::API_PATH);
     }
 
     public function onKernelException(ExceptionEvent $event): void
