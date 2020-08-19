@@ -12,6 +12,7 @@
 			"Lturi\\SymfonyExtensions\\": "/"
 		}
 	},
+	"minimum-stability": "dev",
 	"require": {
 
 	}
