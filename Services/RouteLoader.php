@@ -36,5 +36,7 @@ class RouteLoader extends Loader
         return $routes;
     }
 
-    public function supports($resource, string $type = null): bool { return true; }
+    public function supports($resource, string $type = null): bool {
+        return $resource == "lturi_symfony_extensions";
+    }
 }
