@@ -7,6 +7,7 @@ services:
     public: true
   Lturi\SymfonyExtensions\Services\SerializerService:
     public: true
+    autowire: true
     arguments:
     - '@doctrine.orm.entity_manager'
     - '@service_container'
@@ -16,6 +17,7 @@ services:
     public: true
   Lturi\SymfonyExtensions\Services\Normalizers\EntityNormalizer:
     public: true
+    autowire: true
     arguments:
     - '@doctrine.orm.entity_manager'
     - '@service_container'
@@ -30,6 +32,7 @@ services:
     public: true
   Lturi\SymfonyExtensions\Services\HttpExceptionService:
     public: true
+    autowire: true
     tags:
       - { name: kernel.event_listener, event: kernel.exception }
 
@@ -39,6 +42,7 @@ services:
     public: true
   Lturi\SymfonyExtensions\Services\Response\ApiResponse:
     public: true
+    autowire: true
     arguments: ~
 
   lturi.route_loader:
@@ -46,6 +50,7 @@ services:
     public: true
   Lturi\SymfonyExtensions\Services\RouteLoader:
     public: true
+    autowire: true
     arguments: ["@service_container"]
     tags:
       - { name: routing.loader }
