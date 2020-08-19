@@ -34,8 +34,8 @@ services:
     public: true
     autowire: true
     arguments:
-      - '@service_container'
       - '@router.default'
+      - '@service_container'
     tags:
       - { name: kernel.event_listener, event: kernel.exception }
 
