@@ -9,8 +9,8 @@ services:
     public: true
     autowire: true
     arguments:
-    - '@doctrine.orm.entity_manager'
-    - '@service_container'
+      - '@doctrine.orm.entity_manager'
+      - '@service_container'
 
   lturi.entity_normalizer:
     alias: Lturi\SymfonyExtensions\Services\Normalizers\EntityNormalizer
@@ -19,12 +19,12 @@ services:
     public: true
     autowire: true
     arguments:
-    - '@doctrine.orm.entity_manager'
-    - '@service_container'
-    - '@serializer.mapping.cache_class_metadata_factory'
-    - '@serializer.name_converter.camel_case_to_snake_case'
-    - '@property_accessor'
-    - '@property_info'
+      - '@doctrine.orm.entity_manager'
+      - '@service_container'
+      - '@serializer.mapping.cache_class_metadata_factory'
+      - '@serializer.name_converter.camel_case_to_snake_case'
+      - '@property_accessor'
+      - '@property_info'
 
   # Better manage of symfony exceptions, display errors with better graphic (prod) and different ways, example jsons
   lturi.http_exception:
@@ -33,6 +33,9 @@ services:
   Lturi\SymfonyExtensions\Services\HttpExceptionService:
     public: true
     autowire: true
+    arguments:
+      - '@service_container'
+      - '@router.default'
     tags:
       - { name: kernel.event_listener, event: kernel.exception }
 
