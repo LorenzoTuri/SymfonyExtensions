@@ -1,14 +1,20 @@
 services:
   # Services used to serialize/deserialize in simpler ways doctrine entities
+
+
   lturi.serializer:
-    class: Lturi\SymfonyExtensions\Services\SerializerService
+    alias: Lturi\SymfonyExtensions\Services\SerializerService
+    public: true
+  Lturi\SymfonyExtensions\Services\SerializerService:
     public: true
     arguments:
     - '@doctrine.orm.entity_manager'
     - '@service_container'
-    -
+
   lturi.entity_normalizer:
-    class: Lturi\SymfonyExtensions\Services\Normalizers\EntityNormalizer
+    alias: Lturi\SymfonyExtensions\Services\Normalizers\EntityNormalizer
+    public: true
+  Lturi\SymfonyExtensions\Services\Normalizers\EntityNormalizer:
     public: true
     arguments:
     - '@doctrine.orm.entity_manager'
@@ -20,19 +26,25 @@ services:
 
   # Better manage of symfony exceptions, display errors with better graphic (prod) and different ways, example jsons
   lturi.http_exception:
-    class: Lturi\SymfonyExtensions\Services\HttpExceptionService
+    alias: Lturi\SymfonyExtensions\Services\HttpExceptionService
+    public: true
+  Lturi\SymfonyExtensions\Services\HttpExceptionService:
     public: true
     tags:
       - { name: kernel.event_listener, event: kernel.exception }
 
   # Response services injected in routes params to display a formatted response
   lturi.api_response:
-    class: Lturi\SymfonyExtensions\Services\Response\ApiResponse
+    alias: Lturi\SymfonyExtensions\Services\Response\ApiResponse
+    public: true
+  Lturi\SymfonyExtensions\Services\Response\ApiResponse:
     public: true
     arguments: ~
 
   lturi.route_loader:
-    class: Lturi\SymfonyExtensions\Services\RouteLoader
+    alias: Lturi\SymfonyExtensions\Services\RouteLoader
+    public: true
+  Lturi\SymfonyExtensions\Services\RouteLoader:
     public: true
     arguments: ["@service_container"]
     tags:
