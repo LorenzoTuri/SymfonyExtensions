@@ -1,17 +1,39 @@
 services:
   # Services used to serialize/deserialize in simpler ways doctrine entities
-  Lturi\SymfonyExtensions\Services\SerializerService: ~
-  Lturi\SymfonyExtensions\Services\Normalizers\EntityNormalizer: ~
+  lturi.serializer:
+    class: Lturi\SymfonyExtensions\Services\SerializerService
+    public: true
+    arguments:
+    - '@doctrine.orm.entity_manager'
+    - '@service_container'
+    -
+  lturi.entity_normalizer:
+    class: Lturi\SymfonyExtensions\Services\Normalizers\EntityNormalizer
+    public: true
+    arguments:
+    - '@doctrine.orm.entity_manager'
+    - '@service_container'
+    - '@serializer.mapping.cache_class_metadata_factory'
+    - '@serializer.name_converter.camel_case_to_snake_case'
+    - '@property_accessor'
+    - '@property_info'
 
   # Better manage of symfony exceptions, display errors with better graphic (prod) and different ways, example jsons
-  Lturi\SymfonyExtensions\Services\HttpExceptionService:
+  lturi.http_exception:
+    class: Lturi\SymfonyExtensions\Services\HttpExceptionService
+    public: true
     tags:
       - { name: kernel.event_listener, event: kernel.exception }
 
   # Response services injected in routes params to display a formatted response
-  Lturi\SymfonyExtensions\Services\Response\ApiResponse: ~
+  lturi.api_response:
+    class: Lturi\SymfonyExtensions\Services\Response\ApiResponse
+    public: true
+    arguments: ~
 
-  Lturi\SymfonyExtensions\Services\RouteLoader:
+  lturi.route_loader:
+    class: Lturi\SymfonyExtensions\Services\RouteLoader
+    public: true>
     arguments: ["@service_container"]
     tags:
       - { name: routing.loader }
