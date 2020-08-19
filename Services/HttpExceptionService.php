@@ -16,11 +16,14 @@ class HttpExceptionService
     protected $router;
     /** @var ContainerInterface */
     protected $container;
+    /** @var string */
+    protected $apiPathSegment;
 
     public function __construct(RouterInterface $router, ContainerInterface $container)
     {
         $this->router = $router;
         $this->container = $container;
+        $this->apiPathSegment = $container->getParameter("lturi_symfony_extensions.api.path");
     }
 
     public function onKernelException(ExceptionEvent $event): void
@@ -28,21 +31,21 @@ class HttpExceptionService
         $exception = $event->getThrowable();
 
         if ($exception instanceof NotFoundHttpException) {
-            if (strpos($event->getRequest()->getRequestUri(), '/api/') !== false) {
+            if (strpos($event->getRequest()->getRequestUri(), $this->apiPathSegment) !== false) {
                 $response = $this->errorJson($exception);
             } else {
                 $response = $this->error($exception, "4xx");
             }
             $this->setResponse($event, $response, $exception);
         } elseif ($exception instanceof HttpException) {
-            if (strpos($event->getRequest()->getRequestUri(), '/api/') !== false) {
+            if (strpos($event->getRequest()->getRequestUri(), $this->apiPathSegment) !== false) {
                 $response = $this->errorJson($exception);
             } else {
                 $response = $this->error($exception);
             }
             $this->setResponse($event, $response, $exception);
         } elseif ($exception instanceof \Exception) {
-            if (isset($_SERVER["REQUEST_URI"]) && strpos($_SERVER["REQUEST_URI"], '/api/') !== false) {
+            if (isset($_SERVER["REQUEST_URI"]) && strpos($_SERVER["REQUEST_URI"], $this->apiPathSegment) !== false) {
                 $response = $this->errorJson($exception);
             } else {
                 $response = $this->error($exception);

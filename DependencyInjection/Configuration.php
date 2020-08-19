@@ -12,16 +12,36 @@ class Configuration implements ConfigurationInterface
         $treeBuilder = new TreeBuilder('lturi_symfony_extensions');
 
         $treeBuilder->getRootNode()
+            ->ignoreExtraKeys(false)
             ->children()
                 // Entity configuration for EntityNormalizer
                 ->arrayNode('entity')
-                ->addDefaultsIfNotSet()
-                ->children()
-                    ->scalarNode('namespace')
-                        ->defaultValue("App\\Entity\\")
+                    ->info('Set configuration for environment entities')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->scalarNode('namespace')
+                            ->info('What is the entity namespace? (used to detect if a class is an entity')
+                            ->example('App\\Entity\\')
+                            ->defaultValue("App\\Entity\\")
+                        ->end()
                     ->end()
                 ->end()
-            ->end() // entity
+                ->arrayNode('api')
+                    ->info('Configuration for API path (used to detect if a request is api or not')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->scalarNode('path')
+                            ->info('Url sub path for api routes')
+                            ->example('/api/')
+                            ->defaultValue('/api/')
+                        ->end()
+                        ->booleanNode('load_routes')
+                            ->info('Activate the routes endpoint?')
+                            ->defaultValue(true)
+                        ->end()
+                    ->end()
+                ->end()
+            ->end()
         ->end();
 
         return $treeBuilder;

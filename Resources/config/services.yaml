@@ -1,0 +1,17 @@
+services:
+  # Services used to serialize/deserialize in simpler ways doctrine entities
+  Lturi\SymfonyExtensions\Services\SerializerService: ~
+  Lturi\SymfonyExtensions\Services\Normalizers\EntityNormalizer: ~
+
+  # Better manage of symfony exceptions, display errors with better graphic (prod) and different ways, example jsons
+  Lturi\SymfonyExtensions\Services\HttpExceptionService:
+    tags:
+      - { name: kernel.event_listener, event: kernel.exception }
+
+  # Response services injected in routes params to display a formatted response
+  Lturi\SymfonyExtensions\Services\Response\ApiResponse: ~
+
+  Lturi\SymfonyExtensions\Services\RouteLoader:
+    arguments: ["@service_container"]
+    tags:
+      - { name: routing.loader }

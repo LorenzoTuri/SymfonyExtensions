@@ -3,6 +3,7 @@
 namespace Lturi\SymfonyExtensions\Services\Normalizers;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Lturi\SymfonyExtensions\Classes\Constants;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\PropertyInfo\PropertyTypeExtractorInterface;
@@ -45,7 +46,7 @@ class EntityNormalizer extends ObjectNormalizer implements DenormalizerAwareInte
         ?PropertyTypeExtractorInterface $propertyTypeExtractor = null
     ) {
         $this->entityManager = $entityManager;
-        $this->entityPrefix = $container->getParameter('lturi.symfony_extensions.doctrine.entity');
+        $this->entityPrefix = $container->getParameter(Constants::ENTITY_NAMESPACE);
 
         parent::__construct($classMetadataFactory, $nameConverter, $propertyAccessor, $propertyTypeExtractor);
     }

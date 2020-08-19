@@ -2,7 +2,7 @@
 	"name": "lturi/symfony-extensions",
 	"description": "Bundle to increase the functionalities for application developed for symfony flex systems",
 	"type": "symfony-bundle",
-	"license": "PROPRIETARY",
+	"license": "proprietary",
 	"authors": [{
 		"email": "lorenzoturi1994@gmail.com",
 		"name": "Lorenzo Turi"
