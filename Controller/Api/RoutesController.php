@@ -43,7 +43,7 @@ class RoutesController
 
                 $requirements = $params->getRequirements();
 
-                if (stripos($route, "api") === 0) {
+                if (stripos($route, "api") === 0 || stripos($route, "_api_") !== false) {
                     if (stripos($route, "api_v") === 0) {
                         [$context, $version, $trueRoute] = explode("_", $route, 3);
                     } else {
