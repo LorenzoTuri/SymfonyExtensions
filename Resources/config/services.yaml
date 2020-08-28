@@ -1,7 +1,5 @@
 services:
   # Services used to serialize/deserialize in simpler ways doctrine entities
-
-
   lturi.serializer:
     alias: Lturi\SymfonyExtensions\Services\SerializerService
     public: true
@@ -48,6 +46,7 @@ services:
     autowire: true
     arguments: ~
 
+  # Routes loader
   lturi.route_loader:
     alias: Lturi\SymfonyExtensions\Services\RouteLoader
     public: true
@@ -57,3 +56,11 @@ services:
     arguments: ["@service_container"]
     tags:
       - { name: routing.loader }
+
+  # Controllers registering
+  Lturi\SymfonyExtensions\Controller\Api\RoutesController:
+    tags:
+      - { name: controller.service_arguments }
+  Lturi\SymfonyExtensions\Controller\Api\TranslationController:
+    tags:
+      - { name: controller.service_arguments }

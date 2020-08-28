@@ -3,23 +3,22 @@
 namespace Lturi\SymfonyExtensions\Controller\Api;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Bundle\FrameworkBundle\Routing\Router;
 
 use Lturi\SymfonyExtensions\Services\Response\ApiResponse;
 use Lturi\SymfonyExtensions\Classes\ViewModels\RouteViewModel;
+use Symfony\Component\Routing\RouterInterface;
 
-class RoutesController extends AbstractController
+class RoutesController
 {
     /**
-     * @param Request     $request
+     * @param Router      $router
      * @param ApiResponse $response
      *
      * @return ApiResponse
      */
-    public function routeAction(Request $request, ApiResponse $response): ApiResponse
+    public function routeAction(RouterInterface $router, ApiResponse $response): ApiResponse
     {
-        $router = $this->container->get('router');
         $collection = $router->getRouteCollection();
         $allRoutes = $collection->all();
 
