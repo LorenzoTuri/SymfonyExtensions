@@ -24,7 +24,7 @@ class RouteLoader extends Loader
         if ($this->container->getParameter(Constants::LOAD_ROUTES)) {
             $routes->add(Constants::ROUTES_NAME, new Route(
                 Constants::ROUTES_PATH, [
-                '_controller' => 'Lturi\SymfonyExtensions\Controller\RoutesController::routeAction',
+                '_controller' => 'Lturi\\SymfonyExtensions\\Controller\\Api\\RoutesController::routeAction',
             ],
                 array(),
                 array(),
@@ -36,7 +36,7 @@ class RouteLoader extends Loader
         if ($this->container->getParameter(Constants::LOAD_TRANSLATIONS)) {
             $routes->add(Constants::TRANSLATIONS_NAME, new Route(
                 Constants::TRANSLATIONS_PATH, [
-                '_controller' => 'Lturi\SymfonyExtensions\Controller\TranslationController::getAllRequest',
+                '_controller' => 'Lturi\\SymfonyExtensions\\Controller\\Api\\TranslationController::getAllRequest',
             ],
                 array(),
                 array(),
