@@ -12,7 +12,6 @@ use Lturi\SymfonyExtensions\Classes\ViewModels\RouteViewModel;
 class RoutesController extends AbstractController
 {
     /**
-     * @Route("/api/routes", name="api_routes_get",methods={"GET"})
      * @param Request     $request
      * @param ApiResponse $response
      *

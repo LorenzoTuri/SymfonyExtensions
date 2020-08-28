@@ -33,6 +33,18 @@ class RouteLoader extends Loader
                 array('GET')
             ));
         }
+        if ($this->container->getParameter(Constants::LOAD_TRANSLATIONS)) {
+            $routes->add(Constants::TRANSLATIONS_NAME, new Route(
+                Constants::TRANSLATIONS_PATH, [
+                '_controller' => 'Lturi\SymfonyExtensions\Controller\TranslationController::getAllRequest',
+            ],
+                array(),
+                array(),
+                '',
+                array(),
+                array('GET')
+            ));
+        }
         return $routes;
     }
 

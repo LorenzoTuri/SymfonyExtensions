@@ -32,5 +32,6 @@ class LturiSymfonyExtensionsExtension extends Extension
         $container->setParameter(Constants::ENTITY_NAMESPACE, $config['entity']['namespace']);
         $container->setParameter(Constants::API_PATH, $config['api']['path']);
         $container->setParameter(Constants::LOAD_ROUTES, $config['api']['load_routes']);
+        $container->setParameter(Constants::LOAD_TRANSLATIONS, $config['api']['load_translations']);
 	}
 }
