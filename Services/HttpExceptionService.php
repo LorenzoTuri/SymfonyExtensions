@@ -67,7 +67,8 @@ class HttpExceptionService
 
     public function error(\Exception $exception, string $template = "5xx"): Response
     {
-        $content = $this->container->get('twig')->render(sprintf('exception/%s.html.twig', $template), [
+        // TODO: check it works -> added bundle prefix. Need to move here templates and assets.
+        $content = $this->container->get('twig')->render(sprintf('@LturiSymfonyExtensions/exception/%s.html.twig', $template), [
             'exception' => $exception,
         ]);
         $response = new Response();
