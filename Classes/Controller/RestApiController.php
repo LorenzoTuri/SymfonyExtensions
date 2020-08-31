@@ -34,11 +34,21 @@ abstract class RestApiController extends ApiController
             abs((int) $requestData["limit"]) :
             $this->getParameter("rest.page_limit");
 
-        $criteria = [];
-        $orderings = [];
-
         /** @var ServiceEntityRepository $entityRepository */
         $entityRepository = $this->entityManager->getRepository($this->getEntityClass());
+
+        $criteria = [];
+        $orderings = [];
+        if (isset($requestData["filter"])) {
+            $criteria = $requestData["filter"];
+        }
+        if (isset($requestData["order"])) {
+            if (is_array($requestData["order"]))
+                $orderings = $requestData["order"];
+            else {
+                $orderings = ["id" => $requestData["order"]];
+            }
+        }
 
         if ($limit !== 0) {
             $data = $entityRepository->findBy($criteria, $orderings, $limit, $page*$limit);
