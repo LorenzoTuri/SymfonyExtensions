@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>{% block title %}{% endblock %}</title>
+<head>
+    <title>{% block title %}{% endblock %}</title>
 
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <base href="{{ absolute_url(asset('')) }}">
-        {% block stylesheets %}
-            <link rel="stylesheet" type="text/css" href="{{ asset('bundles/LturiSymfonyExtensions/Resources/public/css/base.css') }}" />
-        {% endblock %}
-    </head>
-    <body class="bg-light" itemscope>
-        {% block body %}{% endblock %}
-        {% block javascripts %}
-            <script type="text/javascript" src="{{ asset('bundles/LturiSymfonyExtensions/Resources/public/js/base.js') }}">
-        {% endblock %}
+    <base href="{{ absolute_url(asset('')) }}">
+    {% block stylesheets %}
+        <link rel="stylesheet" type="text/css" href="{{ asset('bundles/lturisymfonyextensions/base.css') }}" />
+    {% endblock %}
+</head>
+<body class="bg-light" itemscope>
+{% block body %}{% endblock %}
+{% block javascripts %}
+<script type="text/javascript" src="{{ asset('bundles/lturisymfonyextensions/base.js') }}">
+    {% endblock %}
     </body>
-</html>
+    </html>
