@@ -1,4 +1,4 @@
-{% extends 'base.html.twig' %}
+{% extends '@LturiSymfonyExtensions/base.html.twig' %}
 
 {% block title %}{%  if "statusCode" in exception %}{{ exception.statusCode }}{%  else %}{{ exception.code }}{%  endif %} Exception{% endblock %}
 
