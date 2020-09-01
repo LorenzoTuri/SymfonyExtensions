@@ -35,8 +35,17 @@ class SerializerService extends Serializer
         $encoders = [new JsonEncoder()];
         $normalizers = [
             new DateTimeNormalizer(),
-            new EntityNormalizer($entityManager, $container),
-            new DateTimeNormalizer(),
+            new EntityNormalizer(
+                $entityManager,
+                $container,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                $circularReferenceHandler
+            ),
             new GetSetMethodNormalizer(
                 null,
                 null,
@@ -45,7 +54,15 @@ class SerializerService extends Serializer
                 null,
                 $circularReferenceHandler
             ),
-            new ObjectNormalizer(null, null, null, $extractor),
+            new ObjectNormalizer(
+                null,
+                null,
+                null,
+                $extractor,
+                null,
+                null,
+                $circularReferenceHandler
+            ),
             new ArrayDenormalizer(),
         ];
         parent::__construct($normalizers, $encoders);

@@ -7,6 +7,7 @@ use Lturi\SymfonyExtensions\Classes\Constants;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\PropertyInfo\PropertyTypeExtractorInterface;
+use Symfony\Component\Serializer\Mapping\ClassDiscriminatorResolverInterface;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactoryInterface;
 use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
@@ -24,6 +25,7 @@ class EntityNormalizer extends ObjectNormalizer implements DenormalizerAwareInte
     protected $entityPrefix;
 
     use DenormalizerAwareTrait;
+
 
     /**
      * EntityNormalizer constructor.
@@ -43,12 +45,23 @@ class EntityNormalizer extends ObjectNormalizer implements DenormalizerAwareInte
         ?ClassMetadataFactoryInterface $classMetadataFactory = null,
         ?NameConverterInterface $nameConverter = null,
         ?PropertyAccessorInterface $propertyAccessor = null,
-        ?PropertyTypeExtractorInterface $propertyTypeExtractor = null
+        ?PropertyTypeExtractorInterface $propertyTypeExtractor = null,
+        ClassDiscriminatorResolverInterface $classDiscriminatorResolver = null,
+        callable $objectClassResolver = null,
+        array $defaultContext
     ) {
         $this->entityManager = $entityManager;
         $this->entityPrefix = $container->getParameter(Constants::ENTITY_NAMESPACE);
 
-        parent::__construct($classMetadataFactory, $nameConverter, $propertyAccessor, $propertyTypeExtractor);
+        parent::__construct(
+            $classMetadataFactory,
+            $nameConverter,
+            $propertyAccessor,
+            $propertyTypeExtractor,
+            $classDiscriminatorResolver,
+            $objectClassResolver,
+            $defaultContext
+        );
     }
 
     public function supportsDenormalization($data, string $type, string $format = null)
