@@ -48,7 +48,7 @@ class EntityNormalizer extends ObjectNormalizer implements DenormalizerAwareInte
         ?PropertyTypeExtractorInterface $propertyTypeExtractor = null,
         ClassDiscriminatorResolverInterface $classDiscriminatorResolver = null,
         callable $objectClassResolver = null,
-        array $defaultContext
+        array $defaultContext = null
     ) {
         $this->entityManager = $entityManager;
         $this->entityPrefix = $container->getParameter(Constants::ENTITY_NAMESPACE);
