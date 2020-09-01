@@ -5,6 +5,7 @@ namespace Lturi\SymfonyExtensions\Classes\Controller;
 use Lturi\SymfonyExtensions\Services\SerializerService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -12,6 +13,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 class ApiController extends AbstractController
 {
+    /** @var ContainerInterface */
+    protected $container;
     /** @var SerializerService  */
     protected $serializerService;
     /** @var ParameterBagInterface */
@@ -24,17 +27,21 @@ class ApiController extends AbstractController
     protected $validator;
 
     public function __construct(
+        ContainerInterface $container,
         SerializerService $serializerService,
         ParameterBagInterface $params,
         TranslatorInterface $translator,
         EntityManagerInterface $entityManager,
         ValidatorInterface $validator
     ) {
+        $this->container = $container;
         $this->serializerService = $serializerService;
         $this->params = $params;
         $this->translator = $translator;
         $this->entityManager = $entityManager;
         $this->validator = $validator;
+
+        $this->setContainer($container);
     }
 
     /**
