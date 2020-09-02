@@ -3,21 +3,61 @@
 namespace Lturi\SymfonyExtensions\Classes\Controller;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Common\Annotations\Reader;
+use Doctrine\ORM\EntityManagerInterface;
+use Lturi\SymfonyExtensions\Classes\Annotations\RestrictUser;
 use Lturi\SymfonyExtensions\Exceptions\ValidationErrorsException;
 use Lturi\SymfonyExtensions\Services\Response\ApiResponse;
+use Lturi\SymfonyExtensions\Services\SerializerService;
+use ReflectionException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
-/**
- * @package App\Classes\Controller
- */
 abstract class RestApiController extends ApiController
 {
+    /** @var Reader  */
+    protected $reader;
+
+    public function __construct (
+        ContainerInterface $container,
+        SerializerService $serializerService,
+        ParameterBagInterface $params,
+        TranslatorInterface $translator,
+        EntityManagerInterface $entityManager,
+        ValidatorInterface $validator,
+        Reader $reader
+    ) {
+        parent::__construct($container, $serializerService, $params, $translator, $entityManager, $validator);
+
+        $this->reader = $reader;
+    }
+
+    /**
+     * @param int         $id
+     * @param ApiResponse $apiResponse
+     *
+     * @return ApiResponse
+     * @throws ReflectionException
+     */
     protected function getRequestAction(int $id, ApiResponse $apiResponse): ApiResponse
     {
-        $data = $this->entityManager->getRepository($this->getEntityClass())->find($id);
+        $criteria = [
+            "id" => $id,
+        ];
+        $data = $this->entityManager->getRepository($this->getEntityClass())->findOneBy($criteria);
+        if ($authAnnotation = $this->requiresAuthCheck()) {
+            $entityUser = $data->{$authAnnotation->getUserGetter()}();
+            if ($entityUser && $entityUser != $this->getUser()) {
+                throw new UnauthorizedHttpException("Wrong user");
+            }
+        }
         if ($data) {
             $viewModelClass = $this->getEntityViewModelClass();
             return $apiResponse->setResponse(new $viewModelClass($data));
@@ -26,6 +66,13 @@ abstract class RestApiController extends ApiController
         }
     }
 
+    /**
+     * @param Request     $request
+     * @param ApiResponse $apiResponse
+     *
+     * @return ApiResponse
+     * @throws ReflectionException
+     */
     protected function getAllRequestAction(Request $request, ApiResponse $apiResponse): ApiResponse
     {
         $requestData = $this->loadRequestData($request);
@@ -48,6 +95,9 @@ abstract class RestApiController extends ApiController
             else {
                 $orderings = ["id" => $requestData["order"]];
             }
+        }
+        if ($authAnnotation = $this->requiresAuthCheck()) {
+            $criteria[$authAnnotation->getDbFieldName()] = $this->getUser();
         }
 
         if ($limit !== 0) {
@@ -78,7 +128,7 @@ abstract class RestApiController extends ApiController
      * @param ApiResponse $apiResponse
      *
      * @return ApiResponse
-     * @throws ExceptionInterface
+     * @throws ExceptionInterface|ReflectionException
      */
     protected function postRequestAction(Request $request, ApiResponse $apiResponse): ApiResponse
     {
@@ -95,7 +145,7 @@ abstract class RestApiController extends ApiController
      * @param ApiResponse $apiResponse
      *
      * @return ApiResponse
-     * @throws ExceptionInterface
+     * @throws ExceptionInterface|ReflectionException
      */
     protected function putRequestAction(int $id, Request $request, ApiResponse $apiResponse): ApiResponse
     {
@@ -111,6 +161,7 @@ abstract class RestApiController extends ApiController
 
     protected function deleteRequestAction(int $id, ApiResponse $apiResponse): ApiResponse
     {
+        // TODO: check here for auth
         $data = $this->entityManager->getRepository($this->getEntityClass())->find($id);
         if ($data) {
             $this->entityManager->remove($data);
@@ -139,6 +190,7 @@ abstract class RestApiController extends ApiController
      *
      * @return ApiResponse
      * @throws ExceptionInterface
+     * @throws ReflectionException
      */
     private function processDataUpdate(array $requestData, ApiResponse $apiResponse, $injectInto = null): ApiResponse
     {
@@ -148,6 +200,13 @@ abstract class RestApiController extends ApiController
             'json',
             !!$injectInto ? [AbstractNormalizer::OBJECT_TO_POPULATE => $injectInto] : []
         );
+        if ($authAnnotation = $this->requiresAuthCheck()) {
+            $entityUser = $data->{$authAnnotation->getUserGetter()}();
+            if ($entityUser && $entityUser != $this->getUser()) {
+                throw new UnauthorizedHttpException("Wrong user");
+            }
+        }
+
         $validationErrors = $this->validator->validate($data);
         if (count($validationErrors) == 0) {
             $this->entityManager->persist($data);
@@ -159,5 +218,30 @@ abstract class RestApiController extends ApiController
         } else {
             throw new ValidationErrorsException($validationErrors);
         }
+    }
+
+    /**
+     * @return RestrictUser|null
+     * @throws ReflectionException
+     */
+    private function requiresAuthCheck() {
+        /** logged administrators does not require authentication permissions */
+        if ($this->userHasRole("ROLE_ADMINISTRATOR")) return null;
+
+        /** @var RestrictUser $annotation */
+        $annotation = $this->reader->getClassAnnotation(
+            new \ReflectionClass($this->getEntityClass()),
+            RestrictUser::class
+        );
+        return $annotation;
+    }
+
+    private function userHasRole(string $role) {
+        $user = $this->getUser();
+        if (!$user) return false;
+        foreach ($user->getRoles() as $userRole) {
+            if ($userRole == $role) return true;
+        }
+        return false;
     }
 }
