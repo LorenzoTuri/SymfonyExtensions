@@ -52,7 +52,7 @@ abstract class RestApiController extends ApiController
             "id" => $id,
         ];
         $data = $this->entityManager->getRepository($this->getEntityClass())->findOneBy($criteria);
-        if ($authAnnotation = $this->requiresAuthCheck()) {
+        if ($data && $authAnnotation = $this->requiresAuthCheck()) {
             $entityUser = $data->{$authAnnotation->getUserGetter()}();
             if ($entityUser && $entityUser != $this->getUser()) {
                 throw new UnauthorizedUserException("Unauthorized user for this entity");
@@ -200,7 +200,7 @@ abstract class RestApiController extends ApiController
             'json',
             !!$injectInto ? [AbstractNormalizer::OBJECT_TO_POPULATE => $injectInto] : []
         );
-        if ($authAnnotation = $this->requiresAuthCheck()) {
+        if ($data && $authAnnotation = $this->requiresAuthCheck()) {
             $entityUser = $data->{$authAnnotation->getUserGetter()}();
             if ($entityUser && $entityUser != $this->getUser()) {
                 throw new UnauthorizedUserException("Unauthorized user for this entity");
