@@ -6,6 +6,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\ORM\EntityManagerInterface;
 use Lturi\SymfonyExtensions\Classes\Annotations\RestrictUser;
+use Lturi\SymfonyExtensions\Exceptions\UnauthorizedUserException;
 use Lturi\SymfonyExtensions\Exceptions\ValidationErrorsException;
 use Lturi\SymfonyExtensions\Services\Response\ApiResponse;
 use Lturi\SymfonyExtensions\Services\SerializerService;
@@ -14,7 +15,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -44,7 +44,7 @@ abstract class RestApiController extends ApiController
      * @param ApiResponse $apiResponse
      *
      * @return ApiResponse
-     * @throws ReflectionException
+     * @throws UnauthorizedUserException|ReflectionException
      */
     protected function getRequestAction(int $id, ApiResponse $apiResponse): ApiResponse
     {
@@ -55,7 +55,7 @@ abstract class RestApiController extends ApiController
         if ($authAnnotation = $this->requiresAuthCheck()) {
             $entityUser = $data->{$authAnnotation->getUserGetter()}();
             if ($entityUser && $entityUser != $this->getUser()) {
-                throw new UnauthorizedHttpException("Wrong user");
+                throw new UnauthorizedUserException("Unauthorized user for this entity");
             }
         }
         if ($data) {
@@ -128,7 +128,7 @@ abstract class RestApiController extends ApiController
      * @param ApiResponse $apiResponse
      *
      * @return ApiResponse
-     * @throws ExceptionInterface|ReflectionException
+     * @throws ExceptionInterface|ReflectionException|UnauthorizedUserException
      */
     protected function postRequestAction(Request $request, ApiResponse $apiResponse): ApiResponse
     {
@@ -145,7 +145,7 @@ abstract class RestApiController extends ApiController
      * @param ApiResponse $apiResponse
      *
      * @return ApiResponse
-     * @throws ExceptionInterface|ReflectionException
+     * @throws ExceptionInterface|ReflectionException|UnauthorizedUserException
      */
     protected function putRequestAction(int $id, Request $request, ApiResponse $apiResponse): ApiResponse
     {
@@ -190,7 +190,7 @@ abstract class RestApiController extends ApiController
      *
      * @return ApiResponse
      * @throws ExceptionInterface
-     * @throws ReflectionException
+     * @throws ReflectionException|UnauthorizedUserException
      */
     private function processDataUpdate(array $requestData, ApiResponse $apiResponse, $injectInto = null): ApiResponse
     {
@@ -203,7 +203,7 @@ abstract class RestApiController extends ApiController
         if ($authAnnotation = $this->requiresAuthCheck()) {
             $entityUser = $data->{$authAnnotation->getUserGetter()}();
             if ($entityUser && $entityUser != $this->getUser()) {
-                throw new UnauthorizedHttpException("Wrong user");
+                throw new UnauthorizedUserException("Unauthorized user for this entity");
             }
         }
 
