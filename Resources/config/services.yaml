@@ -46,6 +46,22 @@ services:
     autowire: true
     arguments: ~
 
+  # Cached responses types -> extensions for ApiResponse
+  lturi.cacheable_api_response:
+    alias: Lturi\SymfonyExtensions\Services\Response\CacheableApiResponse
+    public: true
+  Lturi\SymfonyExtensions\Services\Response\CacheableApiResponse:
+    public: true
+    autowire: true
+    arguments: ~
+  lturi.cacheable_response:
+    alias: Lturi\SymfonyExtensions\Services\Response\CacheableResponse
+    public: true
+  Lturi\SymfonyExtensions\Services\Response\CacheableResponse:
+    public: true
+    autowire: true
+    arguments: ~
+
   # Routes loader
   lturi.route_loader:
     alias: Lturi\SymfonyExtensions\Services\RouteLoader
