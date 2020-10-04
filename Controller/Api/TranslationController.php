@@ -2,8 +2,8 @@
 
 namespace Lturi\SymfonyExtensions\Controller\Api;
 
-use Lturi\SymfonyExtensions\Classes\Controller\ApiController;
 use Lturi\SymfonyExtensions\Services\Response\ApiResponse;
+use Lturi\SymfonyExtensions\Services\Response\CacheableApiResponse;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Intl\Locales;
@@ -13,13 +13,14 @@ class TranslationController
 {
 
     /**
-     * @param ContainerInterface $container
-     * @param Request $request
-     * @param ApiResponse $apiResponse
+     * @param ContainerInterface   $container
+     * @param Request              $request
+     * @param CacheableApiResponse $apiResponse
+     *
      * @return ApiResponse
      * @throws DirException
      */
-    public function getAllRequest(ContainerInterface $container, Request $request, ApiResponse $apiResponse): ApiResponse
+    public function getAllRequest(ContainerInterface $container, Request $request, CacheableApiResponse $apiResponse): ApiResponse
     {
         $translationsPath = $container->getParameter("translator.default_path");
         $translationsFiles = \Safe\scandir($translationsPath);

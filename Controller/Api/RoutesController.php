@@ -2,8 +2,7 @@
 
 namespace Lturi\SymfonyExtensions\Controller\Api;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Bundle\FrameworkBundle\Routing\Router;
+use Lturi\SymfonyExtensions\Services\Response\CacheableApiResponse;
 
 use Lturi\SymfonyExtensions\Services\Response\ApiResponse;
 use Lturi\SymfonyExtensions\Classes\ViewModels\RouteViewModel;
@@ -12,12 +11,12 @@ use Symfony\Component\Routing\RouterInterface;
 class RoutesController
 {
     /**
-     * @param Router      $router
-     * @param ApiResponse $response
+     * @param RouterInterface      $router
+     * @param CacheableApiResponse $response
      *
      * @return ApiResponse
      */
-    public function routeAction(RouterInterface $router, ApiResponse $response): ApiResponse
+    public function routeAction(RouterInterface $router, CacheableApiResponse $response): ApiResponse
     {
         $collection = $router->getRouteCollection();
         $allRoutes = $collection->all();
