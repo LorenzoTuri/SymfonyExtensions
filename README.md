@@ -32,3 +32,19 @@ Features:
     - SafeString (validate a string for database XSS injection)
     
 Refer to full doc to get details about the single component
+
+
+
+TODO:
+cacheable response fix
+- Since symfony is not completely capable of handling cached response, here is \
+a little fix for that. Insert in the index.php file something like
+
+```
+if ('prod' === $kernel->getEnvironment()) {
+    $kernel = new CachedKernel($kernel);
+}
+```
+
+and automatically each response returned of the types CachableResponse or
+CachableApiResponse will be cached.
