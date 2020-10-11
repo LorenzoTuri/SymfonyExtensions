@@ -1,0 +1,25 @@
+services:
+  # Services used to serialize/deserialize in simpler ways doctrine entities
+  lturi.serializer:
+    alias: Lturi\SymfonyExtensions\Services\SerializerService
+    public: true
+  Lturi\SymfonyExtensions\Services\SerializerService:
+    public: true
+    autowire: true
+    arguments:
+      - '@doctrine.orm.entity_manager'
+      - '@service_container'
+
+  lturi.entity_normalizer:
+    alias: Lturi\SymfonyExtensions\Services\Normalizers\EntityNormalizer
+    public: true
+  Lturi\SymfonyExtensions\Services\Normalizers\EntityNormalizer:
+    public: true
+    autowire: true
+    arguments:
+      - '@doctrine.orm.entity_manager'
+      - '@service_container'
+      - '@serializer.mapping.cache_class_metadata_factory'
+      - '@serializer.name_converter.camel_case_to_snake_case'
+      - '@property_accessor'
+      - '@property_info'

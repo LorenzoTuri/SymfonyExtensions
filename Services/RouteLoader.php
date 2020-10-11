@@ -45,6 +45,18 @@ class RouteLoader extends Loader
                 array('GET')
             ));
         }
+        if ($this->container->getParameter(Constants::LOAD_ENTITIES)) {
+            $routes->add(Constants::ENTITIES_NAME, new Route(
+                Constants::ENTITIES_PATH, [
+                '_controller' => 'Lturi\\SymfonyExtensions\\Controller\\Api\\EntitiesController::getAllRequest',
+            ],
+                array(),
+                array(),
+                '',
+                array(),
+                array('GET')
+            ));
+        }
         return $routes;
     }
 

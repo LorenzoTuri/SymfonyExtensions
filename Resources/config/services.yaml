@@ -1,29 +1,9 @@
+imports:
+  - { resource: services/classes.yaml }
+  - { resource: services/services.yaml }
+  - { resource: services/controllers.yaml }
+
 services:
-  # Services used to serialize/deserialize in simpler ways doctrine entities
-  lturi.serializer:
-    alias: Lturi\SymfonyExtensions\Services\SerializerService
-    public: true
-  Lturi\SymfonyExtensions\Services\SerializerService:
-    public: true
-    autowire: true
-    arguments:
-      - '@doctrine.orm.entity_manager'
-      - '@service_container'
-
-  lturi.entity_normalizer:
-    alias: Lturi\SymfonyExtensions\Services\Normalizers\EntityNormalizer
-    public: true
-  Lturi\SymfonyExtensions\Services\Normalizers\EntityNormalizer:
-    public: true
-    autowire: true
-    arguments:
-      - '@doctrine.orm.entity_manager'
-      - '@service_container'
-      - '@serializer.mapping.cache_class_metadata_factory'
-      - '@serializer.name_converter.camel_case_to_snake_case'
-      - '@property_accessor'
-      - '@property_info'
-
   # Better manage of symfony exceptions, display errors with better graphic (prod) and different ways, example jsons
   lturi.http_exception:
     alias: Lturi\SymfonyExtensions\Services\HttpExceptionService
@@ -36,47 +16,3 @@ services:
       - '@service_container'
     tags:
       - { name: kernel.event_listener, event: kernel.exception }
-
-  # Response services injected in routes params to display a formatted response
-  lturi.api_response:
-    alias: Lturi\SymfonyExtensions\Services\Response\ApiResponse
-    public: true
-  Lturi\SymfonyExtensions\Services\Response\ApiResponse:
-    public: true
-    autowire: true
-    arguments: ~
-
-  # Cached responses types -> extensions for ApiResponse
-  lturi.cacheable_api_response:
-    alias: Lturi\SymfonyExtensions\Services\Response\CacheableApiResponse
-    public: true
-  Lturi\SymfonyExtensions\Services\Response\CacheableApiResponse:
-    public: true
-    autowire: true
-    arguments: ~
-  lturi.cacheable_response:
-    alias: Lturi\SymfonyExtensions\Services\Response\CacheableResponse
-    public: true
-  Lturi\SymfonyExtensions\Services\Response\CacheableResponse:
-    public: true
-    autowire: true
-    arguments: ~
-
-  # Routes loader
-  lturi.route_loader:
-    alias: Lturi\SymfonyExtensions\Services\RouteLoader
-    public: true
-  Lturi\SymfonyExtensions\Services\RouteLoader:
-    public: true
-    autowire: true
-    arguments: ["@service_container"]
-    tags:
-      - { name: routing.loader }
-
-  # Controllers registering
-  Lturi\SymfonyExtensions\Controller\Api\RoutesController:
-    tags:
-      - { name: controller.service_arguments }
-  Lturi\SymfonyExtensions\Controller\Api\TranslationController:
-    tags:
-      - { name: controller.service_arguments }

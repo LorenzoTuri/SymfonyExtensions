@@ -1,0 +1,23 @@
+services:
+  # Routes loader
+  lturi.route_loader:
+    alias: Lturi\SymfonyExtensions\Services\RouteLoader
+    public: true
+  Lturi\SymfonyExtensions\Services\RouteLoader:
+    public: true
+    autowire: true
+    arguments: ["@service_container"]
+    tags:
+      - { name: routing.loader }
+
+  # Controllers registering
+  Lturi\SymfonyExtensions\Controller\Api\RoutesController:
+    tags:
+      - { name: controller.service_arguments }
+  Lturi\SymfonyExtensions\Controller\Api\TranslationController:
+    tags:
+      - { name: controller.service_arguments }
+  Lturi\SymfonyExtensions\Controller\Api\EntitiesController:
+    arguments: ["@service_container", "@Lturi\\SymfonyExtensions\\Classes\\Entities\\EntitiesDescriptor"]
+    tags:
+      - { name: controller.service_arguments }
