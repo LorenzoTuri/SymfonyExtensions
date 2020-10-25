@@ -44,6 +44,11 @@ class EntityPropertyViewModel {
         return $this;
     }
 
+    public function getPropertyType() : Type
+    {
+        return $this->propertyType;
+    }
+
     public function computePropertyType() : string
     {
         return

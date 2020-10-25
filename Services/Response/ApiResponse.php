@@ -54,7 +54,7 @@ class ApiResponse extends JsonResponse
      * @param mixed $additional
      * @param int $status
      */
-    private function insertContent($data, $additional, $status): void
+    protected function insertContent($data, $additional, $status): void
     {
         $content = new \stdClass();
         $content->success = $this->success;

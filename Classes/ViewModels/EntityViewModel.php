@@ -7,6 +7,8 @@ use Ramsey\Collection\Set;
 class EntityViewModel {
     /** @var string */
     protected $name;
+    /** @var string */
+    protected $class;
     /** @var array[EntityPropertyViewModel] */
     protected $properties;
 
@@ -31,6 +33,25 @@ class EntityViewModel {
     public function setName (string $name) : EntityViewModel
     {
         $this->name = $name;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getClass () : string
+    {
+        return $this->class;
+    }
+
+    /**
+     * @param string $class
+     *
+     * @return EntityViewModel
+     */
+    public function setClass (string $class) : EntityViewModel
+    {
+        $this->class = $class;
         return $this;
     }
 

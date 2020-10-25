@@ -21,3 +21,7 @@ services:
     arguments: ["@service_container", "@Lturi\\SymfonyExtensions\\Classes\\Entities\\EntitiesDescriptor"]
     tags:
       - { name: controller.service_arguments }
+  Lturi\SymfonyExtensions\Controller\Api\JsonapiController:
+    arguments: ["@service_container", "@Lturi\\SymfonyExtensions\\Classes\\Entities\\EntitiesDescriptor", "@doctrine.orm.entity_manager"]
+    tags:
+      - { name: controller.service_arguments }

@@ -6,6 +6,7 @@ use Exception;
 use Lturi\SymfonyExtensions\Classes\Constants;
 use Lturi\SymfonyExtensions\Classes\Entities\Entity;
 use Lturi\SymfonyExtensions\Classes\Entities\EntityPath;
+use Lturi\SymfonyExtensions\Controller\Api\JsonapiController;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
@@ -46,7 +47,7 @@ class LturiSymfonyExtensionsExtension extends Extension
 	    if (!isset($config["api"]["entities"])) $config["api"]["entities"] = [];
 	    foreach ($config["api"]["entities"] as $class => $entityConfig) {
 	        $entityConfig["class"] = $class;
-            if (!isset($entityConfig["name"])) $entityConfig["name"] = u($class)->snake();
+            if (!isset($entityConfig["name"])) $entityConfig["name"] = u($class)->camel();
             if (!isset($entityConfig["path"])) $entityConfig["path"] = [];
             if (!isset($entityConfig["path"]["list"])) $entityConfig["path"]["list"] = $this->buildEntityController($entityConfig);
             if (!isset($entityConfig["path"]["get"])) $entityConfig["path"]["get"] = $this->buildEntityController($entityConfig);
@@ -69,6 +70,6 @@ class LturiSymfonyExtensionsExtension extends Extension
     }
 
     private function buildEntityController($entityConfig) {
-	    return "testTESTtest";
+	    return JsonapiController::class.'::dispatchRequest';
     }
 }

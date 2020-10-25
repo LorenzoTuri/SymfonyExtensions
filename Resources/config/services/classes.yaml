@@ -8,6 +8,10 @@ services:
     public: true
     autowire: true
     arguments: ~
+  Lturi\SymfonyExtensions\Services\Response\JsonapiResponse:
+    public: true
+    autowire: true
+    arguments: ~
 
   # Cached responses types -> extensions for ApiResponse
   lturi.cacheable_api_response:
@@ -28,5 +32,10 @@ services:
   # Entities descriptor (entity, properties etc)
   Lturi\SymfonyExtensions\Classes\Entities\EntitiesDescriptor:
     arguments: ["@Symfony\\Contracts\\Cache\\CacheInterface"]
+    public: true
+    tags:
+      - { name: controller.service_arguments }
+  Lturi\SymfonyExtensions\Classes\Entities\RouteDescriptor:
+    public: true
     tags:
       - { name: controller.service_arguments }

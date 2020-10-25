@@ -37,7 +37,7 @@ class EntitiesDescriptor extends AbstractEntitiesDescriptor {
     /**
      * @param array $entities
      *
-     * @return array
+     * @return EntityViewModel[]
      * @throws InvalidArgumentException
      */
     public function describe(array $entities) : array
@@ -48,7 +48,7 @@ class EntitiesDescriptor extends AbstractEntitiesDescriptor {
             foreach ($entities as $entity) {
                 $entityModel = $this->getEntity($entity);
                 if ($entityModel) {
-                    $result[] = $entityModel;
+                    $result[$entity["class"]] = $entityModel;
                     $names[$entity["class"]] = $entityModel->getName();
                 }
             }
@@ -71,6 +71,7 @@ class EntitiesDescriptor extends AbstractEntitiesDescriptor {
             }
             $entityModel
                 ->setName($entity["name"])
+                ->setClass($entity["class"])
                 ->setProperties($properties);
             return $entityModel;
         }

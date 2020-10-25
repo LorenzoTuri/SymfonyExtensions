@@ -31,7 +31,7 @@ class Constants {
 
     // Open api entities name and path
     const ENTITIES_NAME = self::SNAKE_BUNDLE_PREFIX.'api_entities';
-    const ENTITIES_PATH = '/api/entities/description';
+    const ENTITIES_PATH = '/jsonapi';
 
     // Cache keys
     const CACHE_ENTITIES = self::BUNDLE_PREFIX."entities";
