@@ -3,10 +3,8 @@
 namespace Lturi\SymfonyExtensions\DependencyInjection;
 
 use Exception;
-use Lturi\SymfonyExtensions\Classes\Constants;
-use Lturi\SymfonyExtensions\Classes\Entities\Entity;
-use Lturi\SymfonyExtensions\Classes\Entities\EntityPath;
-use Lturi\SymfonyExtensions\Controller\Api\JsonapiController;
+use Lturi\SymfonyExtensions\Framework\Constants;
+use Lturi\SymfonyExtensions\JsonApi\Controller\JsonapiController;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
@@ -69,6 +67,12 @@ class LturiSymfonyExtensionsExtension extends Extension
         return $config;
     }
 
+    /**
+     * TODO: what does entityConfig do?
+     * @param $entityConfig
+     *
+     * @return string
+     */
     private function buildEntityController($entityConfig) {
 	    return JsonapiController::class.'::dispatchRequest';
     }

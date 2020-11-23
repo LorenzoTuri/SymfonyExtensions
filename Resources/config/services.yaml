@@ -6,9 +6,9 @@ imports:
 services:
   # Better manage of symfony exceptions, display errors with better graphic (prod) and different ways, example jsons
   lturi.http_exception:
-    alias: Lturi\SymfonyExtensions\Services\HttpExceptionService
+    alias: Lturi\SymfonyExtensions\Framework\Service\HttpExceptionService
     public: true
-  Lturi\SymfonyExtensions\Services\HttpExceptionService:
+  Lturi\SymfonyExtensions\Framework\Service\HttpExceptionService:
     public: true
     autowire: true
     arguments:

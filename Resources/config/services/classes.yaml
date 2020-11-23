@@ -2,40 +2,40 @@ services:
 
   # Response services injected in routes params to display a formatted response
   lturi.api_response:
-    alias: Lturi\SymfonyExtensions\Services\Response\ApiResponse
+    alias: Lturi\SymfonyExtensions\Framework\Service\Response\ApiResponse
     public: true
-  Lturi\SymfonyExtensions\Services\Response\ApiResponse:
+  Lturi\SymfonyExtensions\Framework\Service\Response\ApiResponse:
     public: true
     autowire: true
     arguments: ~
-  Lturi\SymfonyExtensions\Services\Response\JsonapiResponse:
+  Lturi\SymfonyExtensions\Framework\Service\Response\JsonapiResponse:
     public: true
     autowire: true
     arguments: ~
 
   # Cached responses types -> extensions for ApiResponse
   lturi.cacheable_api_response:
-    alias: Lturi\SymfonyExtensions\Services\Response\CacheableApiResponse
+    alias: Lturi\SymfonyExtensions\Framework\Service\Response\CacheableApiResponse
     public: true
-  Lturi\SymfonyExtensions\Services\Response\CacheableApiResponse:
+  Lturi\SymfonyExtensions\Framework\Service\Response\CacheableApiResponse:
     public: true
     autowire: true
     arguments: ~
   lturi.cacheable_response:
-    alias: Lturi\SymfonyExtensions\Services\Response\CacheableResponse
+    alias: Lturi\SymfonyExtensions\Framework\Service\Response\CacheableResponse
     public: true
-  Lturi\SymfonyExtensions\Services\Response\CacheableResponse:
+  Lturi\SymfonyExtensions\Framework\Service\Response\CacheableResponse:
     public: true
     autowire: true
     arguments: ~
 
   # Entities descriptor (entity, properties etc)
-  Lturi\SymfonyExtensions\Classes\Entities\EntitiesDescriptor:
+  Lturi\SymfonyExtensions\JsonApi\Entity\EntitiesDescriptor:
     arguments: ["@Symfony\\Contracts\\Cache\\CacheInterface"]
     public: true
     tags:
       - { name: controller.service_arguments }
-  Lturi\SymfonyExtensions\Classes\Entities\RouteDescriptor:
+  Lturi\SymfonyExtensions\JsonApi\Entity\RouteDescriptor:
     public: true
     tags:
       - { name: controller.service_arguments }

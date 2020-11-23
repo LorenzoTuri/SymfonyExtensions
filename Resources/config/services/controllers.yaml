@@ -1,9 +1,9 @@
 services:
   # Routes loader
   lturi.route_loader:
-    alias: Lturi\SymfonyExtensions\Services\RouteLoader
+    alias: Lturi\SymfonyExtensions\Framework\Service\RouteLoader
     public: true
-  Lturi\SymfonyExtensions\Services\RouteLoader:
+  Lturi\SymfonyExtensions\Framework\Service\RouteLoader:
     public: true
     autowire: true
     arguments: ["@service_container"]
@@ -11,17 +11,17 @@ services:
       - { name: routing.loader }
 
   # Controllers registering
-  Lturi\SymfonyExtensions\Controller\Api\RoutesController:
+  Lturi\SymfonyExtensions\Framework\Controller\RoutesController:
     tags:
       - { name: controller.service_arguments }
-  Lturi\SymfonyExtensions\Controller\Api\TranslationController:
+  Lturi\SymfonyExtensions\Framework\Controller\TranslationController:
     tags:
       - { name: controller.service_arguments }
-  Lturi\SymfonyExtensions\Controller\Api\EntitiesController:
-    arguments: ["@service_container", "@Lturi\\SymfonyExtensions\\Classes\\Entities\\EntitiesDescriptor"]
+  Lturi\SymfonyExtensions\Framework\Controller\EntitiesController:
+    arguments: ["@service_container", "@Lturi\\SymfonyExtensions\\JsonApi\\Entity\\EntitiesDescriptor"]
     tags:
       - { name: controller.service_arguments }
-  Lturi\SymfonyExtensions\Controller\Api\JsonapiController:
-    arguments: ["@service_container", "@Lturi\\SymfonyExtensions\\Classes\\Entities\\EntitiesDescriptor", "@doctrine.orm.entity_manager"]
+  Lturi\SymfonyExtensions\JsonApi\Controller\JsonapiController:
+    arguments: ["@service_container", "@Lturi\\SymfonyExtensions\\JsonApi\\Entity\\EntitiesDescriptor", "@doctrine.orm.entity_manager"]
     tags:
       - { name: controller.service_arguments }

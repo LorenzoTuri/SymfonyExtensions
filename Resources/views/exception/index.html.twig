@@ -17,7 +17,7 @@
         </div>
         {% if app.environment != "prod" %}
         <div class="row">
-            <pre>{{ exception }}</pre>
+            {{ dump(exception) }}
         </div>
         {% endif %}
     </div>
