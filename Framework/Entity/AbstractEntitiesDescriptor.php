@@ -1,9 +1,9 @@
 <?php
 
-namespace Lturi\SymfonyExtensions\JsonApi\Entity;
+namespace Lturi\SymfonyExtensions\Framework\Entity;
 
 abstract class AbstractEntitiesDescriptor {
-    public abstract function describe(array $items) : array;
+    public abstract function describe(string $cachedKey, array $items) : array;
 
     protected function getDefaultObject() : string
     {

@@ -3,11 +3,11 @@
 namespace Lturi\SymfonyExtensions\Framework\Service;
 
 use Lturi\SymfonyExtensions\Framework\Constants;
-use Lturi\SymfonyExtensions\JsonApi\Entity\EntitiesDescriptor;
-use Lturi\SymfonyExtensions\JsonApi\Entity\RouteDescriptor;
+use Lturi\SymfonyExtensions\Framework\Entity\EntitiesDescriptor;
 use Lturi\SymfonyExtensions\Framework\Controller\EntitiesController;
 use Lturi\SymfonyExtensions\Framework\Controller\RoutesController;
 use Lturi\SymfonyExtensions\Framework\Controller\TranslationController;
+use Lturi\SymfonyExtensions\JsonApi\Entity\RouteDescriptor;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Config\Loader\Loader;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -65,20 +65,18 @@ class RouteLoader extends Loader
                 )
             );
         }
-        if ($this->container->getParameter(Constants::LOAD_ENTITIES)) {
-            $routes->add(
-                Constants::ENTITIES_NAME,
-                $this->generateRoute(
-                    Constants::ENTITIES_PATH,
-                    EntitiesController::class.'::getAllRequest'
-                )
-            );
+        $entities = $this->container->getParameter("jsonApiEntities");
+        $entitiesDescription = $this->entityDescriptor->describe("cachedJsonApiEntities", $entities);
+        $entityRoutes = $this->routeDescriptor->describe($entities, $entitiesDescription);
+        $routes->addCollection($entityRoutes);
 
-            $entities = $this->container->getParameter(Constants::ENTITIES);
-            $entitiesDescription = $this->entityDescriptor->describe($entities);
-            $entityRoutes = $this->routeDescriptor->describe($entities, $entitiesDescription);
-            $routes->addCollection($entityRoutes);
-        }
+        // TODO: move some of the default routes to the routes.yaml
+        /* Load static routes */
+        $routes->addCollection($this->import(
+            '@LturiSymfonyExtensionsBundle/Resources/config/routes.yaml',
+            'yaml'
+        ));
+
         return $routes;
     }
     public function supports($resource, string $type = null): bool {

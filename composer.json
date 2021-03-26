@@ -15,7 +15,8 @@
 	"minimum-stability": "dev",
 	"require": {
 		"php": "^7.2.5",
+		"ext-json": "*",
 		"symfony/cache": "5.1.*",
-		"ramsey/collection": "^1.1"
+		"ramsey/collection": "^1.1",
 	}
 }

@@ -1,0 +1,4 @@
+
+jsonapi_v1_info:
+  path: /api/v1/_info.json
+  controller: Lturi\SymfonyExtensions\JsonApi\Controller\InfoController::info

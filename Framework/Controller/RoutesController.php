@@ -42,6 +42,7 @@ class RoutesController
                 $requirements = $params->getRequirements();
 
                 // TODO: what does context do?
+                // TODO: context is api,frontend,backend etc... not sure if I can use it...
                 if (stripos($route, "api") === 0 || stripos($route, "_api_") !== false) {
                     if (stripos($route, "api_v") === 0) {
                         [$context, $version, $trueRoute] = explode("_", $route, 3);

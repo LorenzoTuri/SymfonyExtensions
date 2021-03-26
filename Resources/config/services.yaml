@@ -2,6 +2,7 @@ imports:
   - { resource: services/classes.yaml }
   - { resource: services/services.yaml }
   - { resource: services/controllers.yaml }
+  - { resource: services/commandApi.yaml }
 
 services:
   # Better manage of symfony exceptions, display errors with better graphic (prod) and different ways, example jsons

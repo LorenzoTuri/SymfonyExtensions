@@ -20,8 +20,6 @@ class EntityNormalizer extends ObjectNormalizer implements DenormalizerAwareInte
 {
     /** @var EntityManagerInterface  */
     protected $entityManager;
-    /** @var string */
-    protected $entityPrefix;
 
     use DenormalizerAwareTrait;
 
@@ -52,7 +50,6 @@ class EntityNormalizer extends ObjectNormalizer implements DenormalizerAwareInte
         array $defaultContext = null
     ) {
         $this->entityManager = $entityManager;
-        $this->entityPrefix = $container->getParameter(Constants::ENTITY_NAMESPACE);
 
         parent::__construct(
             $classMetadataFactory,
@@ -67,6 +64,8 @@ class EntityNormalizer extends ObjectNormalizer implements DenormalizerAwareInte
 
     public function supportsDenormalization($data, string $type, string $format = null)
     {
+        dump($data, $type, $format);
+        die();
         return
             (
                 is_array($data) &&

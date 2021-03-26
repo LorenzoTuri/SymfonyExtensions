@@ -1,12 +1,12 @@
 <?php
 
-namespace Lturi\SymfonyExtensions\JsonApi\Entity;
+namespace Lturi\SymfonyExtensions\Framework\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Lturi\SymfonyExtensions\Framework\Constants;
 use Lturi\SymfonyExtensions\Rest\ViewModel\EntityPropertyViewModel;
 use Lturi\SymfonyExtensions\Rest\ViewModel\EntityViewModel;
 use Psr\Cache\InvalidArgumentException;
-use Ramsey\Collection\Set;
 use ReflectionClass;
 use ReflectionException;
 use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
@@ -39,9 +39,9 @@ class EntitiesDescriptor extends AbstractEntitiesDescriptor {
      * @return EntityViewModel[]
      * @throws InvalidArgumentException
      */
-    public function describe(array $entities) : array
+    public function describe(string $cacheKey, array $entities) : array
     {
-        return $this->cache->get(Constants::CACHE_ENTITIES, function () use ($entities) {
+        return $this->cache->get($cacheKey, function () use ($entities) {
             $result = [];
             $names = [];
             foreach ($entities as $entity) {
@@ -60,12 +60,12 @@ class EntitiesDescriptor extends AbstractEntitiesDescriptor {
     private function getEntity($entity) {
         if (class_exists($entity["class"])) {
             $entityModel = new EntityViewModel();
-            $properties = new Set(EntityPropertyViewModel::class);
+            $properties = new ArrayCollection();
             $fields = $this->propertyInfo->getProperties($entity["class"]);
             foreach ($fields as $field) {
                 $property = $this->getEntityProperty($entity, $field);
                 if ($property) {
-                    $properties[] = $property;
+                    $properties->add($property);
                 }
             }
             $entityModel
@@ -113,7 +113,7 @@ class EntitiesDescriptor extends AbstractEntitiesDescriptor {
                     if (empty($class->getNamespaceName())) {
                         $property->setType($this->getDefaultObject());
                     } else {
-                        $entity->getProperties()->remove($property);
+                        $entity->getProperties()->removeElement($property);
                     }
                 }
             }

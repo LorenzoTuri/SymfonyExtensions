@@ -1,0 +1,71 @@
+services:
+  # 5 commands for various entities
+  lturi.commandApi.create:
+    alias: Lturi\SymfonyExtensions\CommandApi\Command\CreateCommand
+    public: true
+  Lturi\SymfonyExtensions\CommandApi\Command\CreateCommand:
+    public: true
+    autowire: true
+    arguments:
+      - '%commandApiEntities%'
+      - '@Lturi\SymfonyExtensions\Framework\Entity\EntitiesDescriptor'
+      - '@doctrine.orm.entity_manager'
+      - '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
+    tags:
+      - { name: 'console.command' }
+
+  lturi.commandApi.delete:
+    alias: Lturi\SymfonyExtensions\CommandApi\Command\DeleteCommand
+    public: true
+  Lturi\SymfonyExtensions\CommandApi\Command\DeleteCommand:
+    public: true
+    autowire: true
+    arguments:
+      - '%commandApiEntities%'
+      - '@Lturi\SymfonyExtensions\Framework\Entity\EntitiesDescriptor'
+      - '@doctrine.orm.entity_manager'
+      - '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
+    tags:
+      - { name: 'console.command' }
+
+  lturi.commandApi.get:
+    alias: Lturi\SymfonyExtensions\CommandApi\Command\GetCommand
+    public: true
+  Lturi\SymfonyExtensions\CommandApi\Command\GetCommand:
+    public: true
+    autowire: true
+    arguments:
+      - '%commandApiEntities%'
+      - '@Lturi\SymfonyExtensions\Framework\Entity\EntitiesDescriptor'
+      - '@doctrine.orm.entity_manager'
+      - '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
+    tags:
+      - { name: 'console.command' }
+
+  lturi.commandApi.list:
+    alias: Lturi\SymfonyExtensions\CommandApi\Command\ListCommand
+    public: true
+  Lturi\SymfonyExtensions\CommandApi\Command\ListCommand:
+    public: true
+    autowire: true
+    arguments:
+      - '%commandApiEntities%'
+      - '@Lturi\SymfonyExtensions\Framework\Entity\EntitiesDescriptor'
+      - '@doctrine.orm.entity_manager'
+      - '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
+    tags:
+      - { name: 'console.command' }
+
+  lturi.commandApi.update:
+    alias: Lturi\SymfonyExtensions\CommandApi\Command\UpdateCommand
+    public: true
+  Lturi\SymfonyExtensions\CommandApi\Command\UpdateCommand:
+    public: true
+    autowire: true
+    arguments:
+      - '%commandApiEntities%'
+      - '@Lturi\SymfonyExtensions\Framework\Entity\EntitiesDescriptor'
+      - '@doctrine.orm.entity_manager'
+      - '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
+    tags:
+      - { name: 'console.command' }

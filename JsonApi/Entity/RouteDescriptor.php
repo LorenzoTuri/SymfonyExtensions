@@ -4,49 +4,122 @@ namespace Lturi\SymfonyExtensions\JsonApi\Entity;
 
 use Lturi\SymfonyExtensions\Framework\Constants;
 use Lturi\SymfonyExtensions\JsonApi\Controller\JsonapiController;
+use Lturi\SymfonyExtensions\Rest\ViewModel\EntityPropertyViewModel;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
-// TODO: what does the $path param do?
 class RouteDescriptor {
     public function describe($entities, $entitiesDescription) {
         $routes = new RouteCollection();
         foreach ($entities as $entity) {
-            foreach ($entity["path"] as $path) {
-                $routes->add(
-                    $this->generateEntityName($entity, $path),
-                    $this->generateRoute(
-                        $this->generateEntityPath($entity, $path),
-                        $this->generateEntityParams($entity, $path),
-                        $this->getMethods($path["name"])
-                    )
-                );
-                switch ($path["name"]) {
-                    case "list":
-                    case "get":
-                    case "delete":
-                    case "update":
-                    case "create":
-                        $this->loadEntityRelationRules($entitiesDescription, $entity, $path, $routes);
-                        break;
+
+            // TODO: on relations, delete/update only for single relation (?)
+
+            $methodsMap = [
+                "list" => [
+                    "isDetail" => false,
+                    "methods" => ['GET'],
+                    "alternatives" => [[
+                        "name" => "search",
+                        "path" => "search",
+                        "methods" => ['POST']
+                    ]]
+                ],
+                "get" => [
+                    "isDetail" => true,
+                    "methods" => ['GET']
+                ],
+                "create" => [
+                    "isDetail" => false,
+                    "methods" => ['POST']
+                ],
+                "update" => [
+                    "isDetail" => true,
+                    "methods" => ['PUT']
+                ],
+                "delete" => [
+                    "isDetail" => true,
+                    "methods" => ['DELETE']
+                ],
+            ];
+            foreach ($methodsMap as $name => $methods) {
+                foreach ($entity["versions"] as $version) {
+                    $routes->add(
+                        $this->generateEntityName($entity, $version, $name),
+                        $this->generateRoute(
+                            $this->generateEntityPath($entity, $version, $methods["isDetail"]),
+                            $this->generateEntityParams($entity, $version, $name),
+                            $methods["methods"]
+                        )
+                    );
+                    if (isset($methods["alternatives"])) {
+                        foreach ($methods["alternatives"] as $alternative) {
+                            $routes->add(
+                                $this->generateEntityName($entity, $version, $name.".".$alternative["name"]),
+                                $this->generateRoute(
+                                    $this->generateEntityPath($entity, $version, $methods["isDetail"], $alternative["path"]),
+                                    $this->generateEntityParams($entity, $version, $name),
+                                    $alternative["methods"]
+                                )
+                            );
+                        }
+                    }
                 }
+                $this->loadEntityRelationRules($entitiesDescription, $entity, $routes);
             }
         }
         return $routes;
     }
 
-    private function loadEntityRelationRules($entitiesDescription, $entity, $path, RouteCollection $routes) {
+    private function loadEntityRelationRules($entitiesDescription, $entity, RouteCollection $routes) {
         foreach ($entitiesDescription as $entityDescription) {
             if ($entityDescription->getName() == $entity["name"]) {
-                foreach ($entityDescription->getProperties() as $property) {
-                    if ($property->isEntity()) {
-                        if ($this->isDetailPath($path)) {
+                foreach ($entity["versions"] as $version) {
+                    foreach ($entityDescription->getProperties() as $property) {
+                        if ($property->isEntity()) {
+                            if ($property->isCollection()) {
+                                $routes->add(
+                                    $this->generateEntityRelationName($entity, $property, "list"),
+                                    $this->generateRoute(
+                                        $this->generateEntityRelationPath($entity, $version, $property),
+                                        $this->generateEntityRelationParams($entity, $property, $version, "list"),
+                                        [ 'GET' ]
+                                    )
+                                );
+                                // Let's add another "search" endpoint to enable filtering by post (it's not properly json-api related
+                                // But it's really usefull using APIs)
+                                $routes->add(
+                                    $this->generateEntityRelationName($entity, $property, "list.search"),
+                                    $this->generateRoute(
+                                        $this->generateEntityRelationPath($entity, $version, $property, "search"),
+                                        $this->generateEntityRelationParams($entity, $property, $version, "list"),
+                                        ['POST']
+                                    )
+                                );
+                            } else {
+                                $routes->add(
+                                    $this->generateEntityRelationName($entity, $property, "get"),
+                                    $this->generateRoute(
+                                        $this->generateEntityRelationPath($entity, $version, $property),
+                                        $this->generateEntityRelationParams($entity, $property, $version, "get"),
+                                        [ 'GET' ]
+                                    )
+                                );
+                            }
                             $routes->add(
-                                $this->generateEntityRelationName($entity, $path, $property),
+                                $this->generateEntityRelationName($entity, $property, 'update'),
                                 $this->generateRoute(
-                                    $this->generateEntityRelationPath($entity, $path, $property),
-                                    $this->generateEntityRelationParams($entity, $path, $property),
-                                    $this->getMethods($path["name"])
+                                    $this->generateEntityRelationPath($entity, $version, $property),
+                                    $this->generateEntityRelationParams($entity, $property, $version, 'update'),
+                                    [ 'UPDATE' ]
+                                )
+                            );
+                            $routes->add(
+                                $this->generateEntityRelationName($entity, $property, 'delete'),
+                                $this->generateRoute(
+                                    $this->generateEntityRelationPath($entity, $version, $property),
+                                    $this->generateEntityRelationParams($entity, $property, $version, 'delete'),
+                                    [ 'DELETE' ]
                                 )
                             );
                         }
@@ -56,59 +129,57 @@ class RouteDescriptor {
         }
     }
 
-    private function generateEntityName($entity, $path) {
+    private function generateEntityName($entity, $version, $suffix) {
         return implode(".",[
-            Constants::ENTITIES_NAME,
-            $path["name"],
+            "lturi.jsonApi",
             $entity["name"],
+            $version,
+            $suffix,
         ]);
     }
-    private function generateEntityRelationName($entity, $path, $property) {
+    private function generateEntityRelationName($entity, $property, $suffix) {
         return implode(".", [
-            Constants::ENTITIES_NAME,
-            $path["name"],
+            "lturi.jsonApi",
             $entity["name"],
-            $property->getType()
+            $property->getType(),
+            $suffix
         ]);
     }
-    private function generateEntityPath($entity, $path) {
-        return implode("/", [
-            Constants::ENTITIES_PATH,
-            $entity["name"]
-        ])."/".($this->isDetailPath($path) ? "{id}":"");
-    }
-    private function generateEntityRelationPath($entity, $path, $property) {
+    private function generateEntityPath($entity, $version, bool $isDetail, $append = null) {
         return
-            Constants::ENTITIES_PATH."/".
+            "api/" .
+            $version . "/" .
             $entity["name"].
-            "/{id}/relationships/".
-            $property->getType();
+            ($isDetail ? "/{id}" : "").
+            ($append ? "/$append" : "").
+            "{trailingSlash}";
     }
-    private function generateEntityParams($entity, $path) {
-        return [
-            '_controller' => $path["controller"],
-            'entity' => $entity["name"]
-        ];
+    private function generateEntityRelationPath($entity, $version, $property, $append = null) {
+        return
+            "api/" .
+            $version . "/" .
+            $entity["name"] . "/" .
+            "{id}/relationships/" .
+            $property->getType().
+            ($append ? "/$append" : "").
+            "{trailingSlash}";
     }
-    private function generateEntityRelationParams($entity, $path, $property) {
+    private function generateEntityParams($entity, $version, $suffix) {
         return [
-            '_controller' => JsonapiController::class."::dispatchRelationRequest",
+            '_controller' => $entity["controller"]."::".$suffix,
             'entity' => $entity["name"],
-            'relatedEntity' => $property->getType()
+            'version' => $version,
+            'trailingSlash' => '/'
         ];
     }
-
-    private function getMethods($name) {
-        if ($name == "list") return ["GET"];
-        if ($name == "create") return ["CREATE"];
-        if ($name == "get") return ["GET"];
-        if ($name == "delete") return ["DELETE"];
-        if ($name == "update") return ["PATCH"];
-        return [];
-    }
-
-    private function isDetailPath($path) {
-        return in_array($path["name"], ["get", "delete", "update"]);
+    private function generateEntityRelationParams($entity, $property, $version, $suffix) {
+        return [
+            '_controller' => JsonapiController::class."::".$suffix."Relation",
+            'entity' => $entity["name"],
+            'relatedEntity' => $property->getType(),
+            'version' => $version,
+            'trailingSlash' => '/'
+        ];
     }
 
     private function generateRoute($path, $params, $methods) {

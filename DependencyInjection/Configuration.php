@@ -17,8 +17,11 @@ class Configuration implements ConfigurationInterface
             ->ignoreExtraKeys(false)
                 ->children();
 
-        $this->injectEntityConfig($treeBuilderChildren);
-        $this->injectApiConfig($treeBuilderChildren);
+                    $this->injectApiConfig($treeBuilderChildren);
+                    $this->injectCommandApiConfig($treeBuilderChildren);
+                    $this->injectGraphQLApiConfig($treeBuilderChildren);
+                    $this->injectJsonApiConfig($treeBuilderChildren);
+                    $this->injectRestApiConfig($treeBuilderChildren);
 
         $treeBuilderChildren
                 ->end()
@@ -27,26 +30,10 @@ class Configuration implements ConfigurationInterface
         return $treeBuilder;
     }
 
-    private function injectEntityConfig(NodeBuilder $treeNodeChildren) {
-        return $treeNodeChildren
-            // Entity configuration for EntityNormalizer
-            ->arrayNode('entity')
-                ->info('Set configuration for environment entities')
-                ->addDefaultsIfNotSet()
-                ->children()
-                    ->scalarNode('namespace')
-                        ->info('What is the entity namespace? (used to detect if a class is an entity')
-                        ->example('App\\Entity\\')
-                        ->defaultValue("App\\Entity\\")
-                    ->end()
-                ->end()
-            ->end();
-    }
-
     private function injectApiConfig(NodeBuilder $treeNodeChildren) {
         $treeNodeChildrenInternal = $treeNodeChildren
             ->arrayNode('api')
-                ->info('Configuration for API path (used to detect if a request is api or not')
+                ->info('Configuration for API path (used to detect if a request is api or not)')
                 ->addDefaultsIfNotSet()
                 ->children()
                     ->scalarNode('path')
@@ -67,26 +54,47 @@ class Configuration implements ConfigurationInterface
                         ->defaultValue(true)
                     ->end();
 
-        $this->injectApiEntitiesConfig($treeNodeChildrenInternal);
-
         return $treeNodeChildrenInternal
                 ->end()
             ->end();
     }
 
-    private function injectApiEntitiesConfig(NodeBuilder $treeNodeChildren) {
+    private function injectCommandApiConfig(NodeBuilder $treeNodeChildren) {
         return $treeNodeChildren
-            ->arrayNode('entities')
-                ->arrayPrototype()
-                    ->children()
-                        ->scalarNode('name')
-                            ->info('Name used or this entity')
-                        ->end()
-                        ->arrayNode('path')
-                            ->scalarPrototype()
-                            ->end()
-                        ->end()
-                    ->end()
+            ->arrayNode('commandApi')
+                ->info("Array of entities, to be loaded into the command-api")
+                ->scalarPrototype()
+                    ->defaultValue([])
+                ->end()
+            ->end();
+    }
+
+    private function injectGraphQLApiConfig(NodeBuilder $treeNodeChildren) {
+        return $treeNodeChildren
+            ->arrayNode('graphQLApi')
+                ->info("Array of entities, to be loaded into the graphQL-api")
+                ->scalarPrototype()
+                    ->defaultValue([])
+                ->end()
+            ->end();
+    }
+
+    private function injectJsonApiConfig(NodeBuilder $treeNodeChildren) {
+        return $treeNodeChildren
+            ->arrayNode('jsonApi')
+                ->info("Array of entities, to be loaded into the json-api")
+                ->scalarPrototype()
+                    ->defaultValue([])
+                ->end()
+            ->end();
+    }
+
+    private function injectRestApiConfig(NodeBuilder $treeNodeChildren) {
+        return $treeNodeChildren
+            ->arrayNode('restApi')
+                ->info("Array of entities, to be loaded into the rest-api")
+                ->scalarPrototype()
+                    ->defaultValue([])
                 ->end()
             ->end();
     }

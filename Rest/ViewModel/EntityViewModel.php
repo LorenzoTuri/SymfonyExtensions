@@ -2,19 +2,19 @@
 
 namespace Lturi\SymfonyExtensions\Rest\ViewModel;
 
-use Ramsey\Collection\Set;
+use Doctrine\Common\Collections\ArrayCollection;
 
 class EntityViewModel {
     /** @var string */
     protected $name;
     /** @var string */
     protected $class;
-    /** @var array[EntityPropertyViewModel] */
+    /** @var ArrayCollection */
     protected $properties;
 
     public function __construct ()
     {
-        $this->properties = new Set(EntityPropertyViewModel::class);
+        $this->properties = new ArrayCollection();
     }
 
     /**
@@ -56,19 +56,19 @@ class EntityViewModel {
     }
 
     /**
-     * @return Set
+     * @return ArrayCollection
      */
-    public function getProperties () : Set
+    public function getProperties () : ArrayCollection
     {
         return $this->properties;
     }
 
     /**
-     * @param Set $properties
+     * @param ArrayCollection $properties
      *
      * @return EntityViewModel
      */
-    public function setProperties (Set $properties) : EntityViewModel
+    public function setProperties (ArrayCollection $properties) : EntityViewModel
     {
         $this->properties = $properties;
         return $this;

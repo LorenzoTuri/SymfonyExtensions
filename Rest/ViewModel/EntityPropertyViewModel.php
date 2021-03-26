@@ -2,6 +2,7 @@
 
 namespace Lturi\SymfonyExtensions\Rest\ViewModel;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\PropertyInfo\Type;
 
 class EntityPropertyViewModel {
@@ -53,18 +54,19 @@ class EntityPropertyViewModel {
     {
         return
             $this->type ?
-                $this->type :
-                $this->propertyType->isCollection() ?
-                (
-                    $this->propertyType->getCollectionValueType() ?
-                        $this->propertyType->getCollectionValueType()->getClassName() :
-                        "array"
-                ) :
-                (
-                    $this->propertyType->getClassName() ?
-                        $this->propertyType->getClassName():
-                        $this->propertyType->getBuiltinType()
-                );
+                $this->type : (
+                $this->isCollection() ?
+                    (
+                        $this->propertyType->getCollectionValueType() ?
+                            $this->propertyType->getCollectionValueType()->getClassName() :
+                            "array"
+                    ) :
+                    (
+                        $this->propertyType->getClassName() ?
+                            $this->propertyType->getClassName():
+                            $this->propertyType->getBuiltinType()
+                    )
+            );
     }
 
     public function getType() : string
@@ -89,7 +91,10 @@ class EntityPropertyViewModel {
     public function isCollection () : bool
     {
         return
-            $this->propertyType && $this->propertyType->isCollection();
+            $this->propertyType && (
+                $this->propertyType->isCollection() ||
+                is_subclass_of($this->propertyType->getClassName(), \Traversable::class)
+            );
     }
 
     /**

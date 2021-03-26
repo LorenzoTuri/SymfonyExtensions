@@ -3,7 +3,7 @@
 namespace Lturi\SymfonyExtensions\Framework\Controller;
 
 use Lturi\SymfonyExtensions\Framework\Constants;
-use Lturi\SymfonyExtensions\JsonApi\Entity\AbstractEntitiesDescriptor;
+use Lturi\SymfonyExtensions\Framework\Entity\AbstractEntitiesDescriptor;
 use Lturi\SymfonyExtensions\Framework\Service\Response\ApiResponse;
 use Lturi\SymfonyExtensions\Framework\Service\Response\CacheableApiResponse;
 use Psr\Container\ContainerInterface;
@@ -26,9 +26,9 @@ class EntitiesController
      */
     public function getAllRequest(CacheableApiResponse $apiResponse): ApiResponse
     {
-        // TODO: find a way to get parameter without controller
-        $entities = $this->container->getParameter(Constants::ENTITIES);
-        $results = $this->entitiesDescriptor->describe($entities);
+        // TODO: find a way to get parameter without container
+        $entities = $this->container->getParameter("jsonApiEntities");
+        $results = $this->entitiesDescriptor->describe("cachedJsonApiEntities", $entities);
         return $apiResponse->setResponse($results);
     }
 }

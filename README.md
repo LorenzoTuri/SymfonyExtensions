@@ -48,3 +48,11 @@ if ('prod' === $kernel->getEnvironment()) {
 
 and automatically each response returned of the types CachableResponse or
 CachableApiResponse will be cached.
+
+completion of parts:
+- commandApi: completed
+- graphQLApi: 0%
+- jsonApi: 66%
+- restApi: 0
+- rest: to be refactored into restApi/framework and the removed
+- package.json/composer.json: TO CHECK FOR DEPENDENCIES

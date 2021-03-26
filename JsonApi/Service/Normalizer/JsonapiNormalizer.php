@@ -3,10 +3,13 @@
 namespace Lturi\SymfonyExtensions\JsonApi\Service\Normalizer;
 
 use ArrayObject;
+use Doctrine\Inflector\Inflector;
 use Lturi\SymfonyExtensions\Rest\ViewModel\EntityPropertyViewModel;
 use Lturi\SymfonyExtensions\Rest\ViewModel\EntityViewModel;
 use ReflectionClass;
 use ReflectionException;
+use Symfony\Component\Routing\Route;
+use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactoryInterface;
 use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
@@ -15,6 +18,7 @@ use Symfony\Component\Serializer\Normalizer\DenormalizerAwareTrait;
 use Symfony\Component\Serializer\Normalizer\NormalizerAwareInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerAwareTrait;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
+use Symfony\Component\String\Inflector\EnglishInflector;
 
 class JsonapiNormalizer extends AbstractNormalizer implements DenormalizerAwareInterface, NormalizerAwareInterface
 {
@@ -22,6 +26,7 @@ class JsonapiNormalizer extends AbstractNormalizer implements DenormalizerAwareI
     const ENTITY_MANAGER = "jsonapi.entity.manager";
 
     protected $entitiesDescription;
+    protected $englishInflector;
 
     use DenormalizerAwareTrait;
     use NormalizerAwareTrait;
@@ -41,6 +46,7 @@ class JsonapiNormalizer extends AbstractNormalizer implements DenormalizerAwareI
         array $defaultContext = []
     ) {
         $this->entitiesDescription = $entitiesDescription;
+        $this->englishInflector = new EnglishInflector();
 
         parent::__construct(
             $classMetadataFactory,
@@ -61,11 +67,6 @@ class JsonapiNormalizer extends AbstractNormalizer implements DenormalizerAwareI
         if (is_object($data)) {
             return !!$this->getEntityDescription($data);
         }
-        if (is_array($data)) {
-            return array_reduce($data, function($carry, $item) {
-                return $carry && $this->supportsNormalization($item);
-            }, true);
-        }
         return false;
     }
 
@@ -79,9 +80,11 @@ class JsonapiNormalizer extends AbstractNormalizer implements DenormalizerAwareI
      */
     public function supportsDenormalization($data, string $type, string $format = null)
     {
-        return is_array($data) && isset($data["data"]) && array_reduce($this->entitiesDescription, function($context, EntityViewModel $item) use ($type) {
-           return $context || $item->getClass() == $type;
-        }, false);
+        return
+            is_array($data) &&
+            array_reduce($this->entitiesDescription, function($context, EntityViewModel $item) use ($type) {
+                return $context || $item->getClass() == $type;
+            }, false);
     }
 
     /**
@@ -96,19 +99,21 @@ class JsonapiNormalizer extends AbstractNormalizer implements DenormalizerAwareI
      *
      * @return array|ArrayObject|bool|float|int|mixed|string|null
      * @throws ExceptionInterface
-     * TODO: links
      */
     public function normalize ($object, string $format = null, array $context = [], $depth = 0)
     {
         if (is_null($object) || !$this->supportsNormalization($object)) return $object;
         // TODO: inject links into entity
-        $routes = isset($context[self::ROUTE_DESCRIPTION]) ? $context[self::ROUTE_DESCRIPTION] : [];
+        /** @var RouteCollection $routes */
+        $routes = isset($context[self::ROUTE_DESCRIPTION]) ? $context[self::ROUTE_DESCRIPTION] : new RouteCollection();
 
         $entity = $this->getEntityDescription($object);
         $result = [
             "id" => (string)$object->getId(),
             "type" => $entity->getName(),
-            "links" => []
+            "links" => [
+                "self" => $this->getEntityLink($routes, $entity, $object->getId()),
+            ]
         ];
         if ($depth >= 1) {
             return $result;
@@ -130,7 +135,9 @@ class JsonapiNormalizer extends AbstractNormalizer implements DenormalizerAwareI
                 }
                 if ($property->isEntity()) {
                     $content = [
-                        "links" => [],
+                        "links" => [
+                            "self" => $this->getEntityPropertyLink($routes, $entity, $object->getId(), $property)
+                        ],
                         "data" => $localResult
                     ];
                 } else {
@@ -144,6 +151,16 @@ class JsonapiNormalizer extends AbstractNormalizer implements DenormalizerAwareI
                 }
             }
             if ($property->isEntity()) {
+                if (!$property->isCollection()) {
+                    $content["links"] = [
+                        "self" => $this->getEntityPropertyLink($routes, $entity, $object->getId(), $property),
+                        "related" => $this->getEntityLink(
+                            $routes,
+                            $this->entitiesDescription[$property->getPropertyType()->getClassName()],
+                            $content["id"]
+                        )
+                    ];
+                }
                 $result["relationships"][$property->getName()] = $content;
             } else {
                 $result["attributes"][$property->getName()] = $content;
@@ -167,6 +184,8 @@ class JsonapiNormalizer extends AbstractNormalizer implements DenormalizerAwareI
      */
     public function denormalize($data, string $type, string $format = null, array $context = [])
     {
+        // TODO: i've removed it but... denormalize should work on "data" => ["whatever"...]
+        //  restore it...
         $entityManager = (isset($context[self::ENTITY_MANAGER]) && $context[self::ENTITY_MANAGER]) ?
             $context[self::ENTITY_MANAGER] :
             null;
@@ -176,50 +195,74 @@ class JsonapiNormalizer extends AbstractNormalizer implements DenormalizerAwareI
             new $type();
         $entityDescription = $this->getEntityDescriptionByClass($type);
 
-        $data = $data["data"];
         if ($entityManager && isset($data["id"]) && !isset($context[AbstractNormalizer::OBJECT_TO_POPULATE])) {
             $object = $entityManager->find($type, $data["id"]);
+            if (!$object) {
+                // TODO: proper exception (or move it to entity manager?)
+                throw new \Exception("Entity not found");
+            }
         }
-        $attributes = isset($data["attributes"]) ? $data["attributes"] : [];
-        $relations = isset($data["relationships"]) ? $data["relationships"] : [];
 
         /** @var EntityPropertyViewModel $property */
         foreach ($entityDescription->getProperties() as $property) {
+            // TODO: this is a problem on update: always new relations get's created
             if ($property->getName() == "id") continue;
+
             $methodName = "set".$property->getName();
-            if ($property->isEntity()) {
-                if (isset($relations[$property->getName()]) && method_exists($object, $methodName)) {
-                    call_user_func(
-                        array($object, $methodName),
-                        $this->denormalizer->denormalize(
-                            ["data" => $relations[$property->getName()]],
-                            $property->getPropertyType()->getClassName(),
-                            null,
-                            [
-                                self::ENTITY_MANAGER => $entityManager
-                            ]
-                        )
-                    );
-                }
-            } else {
-                if (isset($attributes[$property->getName()]) && method_exists($object, $methodName)) {
-                    if ($property->getPropertyType()->getClassName()) {
-                        $class = new ReflectionClass($property->getPropertyType()->getClassName());
-                        if ($class->getConstructor() && $class->getConstructor()->getNumberOfRequiredParameters() == 0)
-                            $value = $this->denormalizer->denormalize(
-                                $attributes[$property->getName()],
+            $addMethodName = $this->englishInflector->singularize("add".$property->getName())[0];
+
+            if (isset($data[$property->getName()])) {
+                if (method_exists($object, $addMethodName)) {
+                    if ($property->isCollection()) {
+                        $propertyType =
+                            $property->getPropertyType()->getCollectionValueType() ?
+                                $property->getPropertyType()->getCollectionValueType()->getClassName() :
+                                $property->getPropertyType()->getClassName();
+                        foreach ($data[$property->getName()] as $singleRelation) {
+                            call_user_func(
+                                array($object, $addMethodName),
+                                $this->denormalizer->denormalize(
+                                    $singleRelation,
+                                    $propertyType,
+                                    null,
+                                    [
+                                        self::ENTITY_MANAGER => $entityManager
+                                    ]
+                                )
+                            );
+                        }
+                    } else {
+                        call_user_func(
+                            array($object, $addMethodName),
+                            $this->denormalizer->denormalize(
+                                $singleRelation,
+                                $propertyType,
+                                null,
+                                [
+                                    self::ENTITY_MANAGER => $entityManager
+                                ]
+                            )
+                        );
+                    }
+                } else if (method_exists($object, $methodName)) {
+                    if ($property->isEntity()) {
+                        call_user_func(
+                            array($object, $methodName),
+                            $this->denormalizer->denormalize(
+                                $data[$property->getName()],
                                 $property->getPropertyType()->getClassName(),
                                 null,
                                 [
                                     self::ENTITY_MANAGER => $entityManager
                                 ]
-                            );
-                        // TODO: here are missing features...
-                        else continue;
+                            )
+                        );
                     } else {
-                        $value = $attributes[$property->getName()];
+                        call_user_func(
+                            array($object, $methodName),
+                            $data[$property->getName()]
+                        );
                     }
-                    call_user_func(array($object, $methodName), $value);
                 }
             }
         }
@@ -250,5 +293,39 @@ class JsonapiNormalizer extends AbstractNormalizer implements DenormalizerAwareI
             if ($entityClass == $class) return $this->entitiesDescription[$entityClass];
         }
         return null;
+    }
+
+    private function getEntityLink(
+        RouteCollection $routes,
+        EntityViewModel $entity,
+        $id
+    ) {
+        return str_replace("{trailingSlash}", "", str_replace("{id}", $id, array_reduce($routes->all(), function($carry, Route $route) use ($entity) {
+            if ($carry) return $carry;
+            if (
+                $route->getDefault("entity") == $entity->getName() &&
+                stripos($route->getPath(), "{id}") !== false
+            ) {
+                return $route->getPath();
+            }
+        }, null)));
+    }
+
+    private function getEntityPropertyLink(
+        RouteCollection $routes,
+        EntityViewModel $entity,
+        $id,
+        EntityPropertyViewModel $property
+    ) {
+        return str_replace("{trailingSlash}", "", str_replace("{id}", $id, array_reduce($routes->all(), function($carry, Route $route) use ($entity, $property) {
+            if ($carry) return $carry;
+            if (
+                $route->getDefault("entity") == $entity->getName() &&
+                $route->getDefault("relatedEntity") == $property->getType() &&
+                stripos($route->getPath(), "{id}") !== false
+            ) {
+                return $route->getPath();
+            }
+        }, null)));
     }
 }
