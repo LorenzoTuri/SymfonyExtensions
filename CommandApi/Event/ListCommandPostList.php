@@ -6,33 +6,33 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Contracts\EventDispatcher\Event;
 
 class ListCommandPostList extends Event {
-    protected $entityName;
+    protected $type;
     protected $entityList;
 
     public function __construct(
-        string $entityName,
+        string $type,
         $entityList
     )
     {
-        $this->entityName = $entityName;
+        $this->type = $type;
         $this->entityList = $entityList;
     }
 
     /**
      * @return string
      */
-    public function getEntityName(): string
+    public function getType(): string
     {
-        return $this->entityName;
+        return $this->type;
     }
 
     /**
-     * @param string $entityName
-     * @return CreateCommandPreSave
+     * @param string $type
+     * @return ListCommandPostList
      */
-    public function setEntityName(string $entityName): CreateCommandPreSave
+    public function setType(string $type): ListCommandPostList
     {
-        $this->entityName = $entityName;
+        $this->type = $type;
         return $this;
     }
 

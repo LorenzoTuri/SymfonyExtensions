@@ -6,7 +6,6 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\LazyCriteriaCollection;
 use Lturi\SymfonyExtensions\CommandApi\Event\ListCommandPostList;
 use Lturi\SymfonyExtensions\CommandApi\Event\ListCommandPreList;
-use Lturi\SymfonyExtensions\Framework\Exception\UnrecognizableFilterException;
 use Lturi\SymfonyExtensions\Rest\ViewModel\EntityViewModel;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
@@ -18,7 +17,6 @@ class ListCommand extends AbstractCommand
      * @param EntityViewModel $entity
      * @param ParameterBagInterface $requestContent
      * @return Collection|LazyCriteriaCollection
-     * @throws UnrecognizableFilterException
      */
     public function executeApi(
         EntityViewModel $entity,
@@ -26,22 +24,23 @@ class ListCommand extends AbstractCommand
     ): Collection|LazyCriteriaCollection
     {
         $entityDataEvent = $this->eventDispatcher->dispatch(new ListCommandPreList(
-            $entity->getName(),
+            $entity->getClass(),
             $requestContent
         ));
+        $requestContent = $entityDataEvent->getRequestContent();
 
         $entityList = $this->entityManager->list(
+            $requestContent,
             $entity->getClass(),
-            $entityDataEvent->getRequestContent()->all(),
-            $requestContent
+            $entity->getName(),
+            $requestContent->all(),
+            true
         );
 
         $entityDataEvent = $this->eventDispatcher->dispatch(new ListCommandPostList(
-            $entity->getName(),
+            $entity->getClass(),
             $entityList
         ));
-        $entityList = $entityDataEvent->getEntityList();
-
-        return $entityList;
+        return $entityDataEvent->getEntityList();
     }
 }

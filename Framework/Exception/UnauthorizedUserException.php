@@ -2,12 +2,12 @@
 
 namespace Lturi\SymfonyExtensions\Framework\Exception;
 
-use Symfony\Component\HttpKernel\Exception\HttpException;
+use Exception;
 use Throwable;
 
-class UnauthorizedUserException extends HttpException {
-    public function __construct (string $message = null, Throwable $previous = null, array $headers = [], ?int $code = 0)
+class UnauthorizedUserException extends Exception {
+    public function __construct($code = 0, Throwable $previous = null)
     {
-        parent::__construct(401, $message, $previous, $headers, $code);
+        parent::__construct("Unauthorized user", $code, $previous);
     }
 }

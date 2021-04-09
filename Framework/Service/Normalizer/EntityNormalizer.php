@@ -3,8 +3,6 @@
 namespace Lturi\SymfonyExtensions\Framework\Service\Normalizer;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Lturi\SymfonyExtensions\Framework\Constants;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\PropertyInfo\PropertyTypeExtractorInterface;
 use Symfony\Component\Serializer\Mapping\ClassDiscriminatorResolverInterface;
@@ -23,31 +21,26 @@ class EntityNormalizer extends ObjectNormalizer implements DenormalizerAwareInte
 
     use DenormalizerAwareTrait;
 
-
     /**
-     * EntityNormalizer constructor.
-     *
-     * @param EntityManagerInterface                   $entityManager
-     * @param ContainerInterface                       $container
-     * @param ClassMetadataFactoryInterface|null       $classMetadataFactory
-     * @param NameConverterInterface|null              $nameConverter
-     * @param PropertyAccessorInterface|null           $propertyAccessor
-     * @param PropertyTypeExtractorInterface|null      $propertyTypeExtractor
+     * @param EntityManagerInterface $entityManager
+     * @param ClassMetadataFactoryInterface|null $classMetadataFactory
+     * @param NameConverterInterface|null $nameConverter
+     * @param PropertyAccessorInterface|null $propertyAccessor
+     * @param PropertyTypeExtractorInterface|null $propertyTypeExtractor
      *
      * @param ClassDiscriminatorResolverInterface|null $classDiscriminatorResolver
-     * @param callable|null                            $objectClassResolver
-     * @param array|null                               $defaultContext
+     * @param callable|null $objectClassResolver
+     * @param array $defaultContext
      */
     public function __construct(
         EntityManagerInterface $entityManager,
-        ContainerInterface $container,
-        ?ClassMetadataFactoryInterface $classMetadataFactory = null,
-        ?NameConverterInterface $nameConverter = null,
-        ?PropertyAccessorInterface $propertyAccessor = null,
-        ?PropertyTypeExtractorInterface $propertyTypeExtractor = null,
+        ClassMetadataFactoryInterface $classMetadataFactory = null,
+        NameConverterInterface $nameConverter = null,
+        PropertyAccessorInterface $propertyAccessor = null,
+        PropertyTypeExtractorInterface $propertyTypeExtractor = null,
         ClassDiscriminatorResolverInterface $classDiscriminatorResolver = null,
         callable $objectClassResolver = null,
-        array $defaultContext = null
+        array $defaultContext = []
     ) {
         $this->entityManager = $entityManager;
 
@@ -64,15 +57,11 @@ class EntityNormalizer extends ObjectNormalizer implements DenormalizerAwareInte
 
     public function supportsDenormalization($data, string $type, string $format = null)
     {
-        dump($data, $type, $format);
-        die();
-        return
-            (
-                is_array($data) &&
-                strpos($type, $this->entityPrefix) === 0 &&
-                isset($data['id']) &&
-                $data["id"]
-            );
+        return (
+            is_array($data) &&
+            isset($data['id']) &&
+            $data["id"]
+        );
     }
 
     /**

@@ -5,6 +5,7 @@ namespace Lturi\SymfonyExtensions\CommandApi\Command;
 use Lturi\SymfonyExtensions\CommandApi\Event\GetCommandPostGet;
 use Lturi\SymfonyExtensions\CommandApi\Event\GetCommandPreGet;
 use Lturi\SymfonyExtensions\Framework\Exception\EntityIdNotFoundException;
+use Lturi\SymfonyExtensions\Framework\Exception\UnauthorizedUserException;
 use Lturi\SymfonyExtensions\Rest\ViewModel\EntityViewModel;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -37,22 +38,27 @@ class GetCommand extends AbstractCommand
     ): object
     {
         $id = $requestContent->get("id");
-
         $entityDataEvent = $this->eventDispatcher->dispatch(new GetCommandPreGet(
-            $entity->getName(),
+            $entity->getClass(),
             $id
         ));
-        $id = $entityDataEvent->getId();
 
-        $entityData = $this->entityManager->find($entity->getClass(), $id);
+        $entityData = $this->entityManager->find(
+            $entityDataEvent->getRequestContent(),
+            $entity->getClass(),
+            $entity->getName(),
+            $entityDataEvent->getId(),
+            true
+        );
 
         $entityDataEvent = $this->eventDispatcher->dispatch(new GetCommandPostGet(
-            $entity->getName(),
+            $entity->getClass(),
             $entityData
         ));
-        $entityData = $entityDataEvent->getEntityData();
+        if (!$entityDataEvent->getEntityData()) {
+            throw new EntityIdNotFoundException($id);
+        }
 
-        if (!$entityData) throw new EntityIdNotFoundException($id);
-        return $entityData;
+        return $entityDataEvent->getEntityData();
     }
 }

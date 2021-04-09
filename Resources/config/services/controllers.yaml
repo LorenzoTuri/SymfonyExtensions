@@ -18,7 +18,7 @@ services:
     tags:
       - { name: controller.service_arguments }
   Lturi\SymfonyExtensions\Framework\Controller\EntitiesController:
-    arguments: ["@service_container", "@Lturi\\SymfonyExtensions\\JsonApi\\Entity\\EntitiesDescriptor"]
+    arguments: ["@service_container", "@Lturi\\SymfonyExtensions\\Framework\\EntityUtility\\EntitiesDescriptor"]
     tags:
       - { name: controller.service_arguments }
   Lturi\SymfonyExtensions\JsonApi\Controller\JsonapiController:
@@ -26,7 +26,7 @@ services:
     autowire: true
     arguments:
       - "@service_container"
-      - "@Lturi\\SymfonyExtensions\\JsonApi\\Entity\\EntitiesDescriptor"
+      - "@Lturi\\SymfonyExtensions\\Framework\\EntityUtility\\EntitiesDescriptor"
       - "@Lturi\\SymfonyExtensions\\JsonApi\\Entity\\RouteDescriptor"
       - "@doctrine.orm.entity_manager"
     tags:
@@ -36,6 +36,6 @@ services:
   Lturi\SymfonyExtensions\JsonApi\Controller\InfoController:
     arguments:
       - "@service_container"
-      - "@Lturi\\SymfonyExtensions\\JsonApi\\Entity\\EntitiesDescriptor"
+      - "@Lturi\\SymfonyExtensions\\Framework\\EntityUtility\\EntitiesDescriptor"
     tags:
       - { name: controller.service_arguments }

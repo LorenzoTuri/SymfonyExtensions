@@ -1,0 +1,15 @@
+services:
+  Lturi\SymfonyExtensions\GraphQLApi\Controller\GraphQLController:
+    public: true
+    autowire: true
+    arguments:
+      - '%commandApiEntities%'
+      - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntitiesDescriptor'
+      - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntityManagerInterface'
+      #- '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
+    tags:
+      - { name: controller.service_arguments }
+
+  Lturi\SymfonyExtensions\GraphQLApi\Entity\RouteDescriptor:
+    public: true
+    autowire: true

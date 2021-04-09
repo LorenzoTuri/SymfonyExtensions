@@ -37,7 +37,6 @@ class SerializerService extends Serializer
             new DateTimeNormalizer(),
             new EntityNormalizer(
                 $entityManager,
-                $container,
                 null,
                 null,
                 null,

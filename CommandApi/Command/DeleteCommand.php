@@ -28,33 +28,36 @@ class DeleteCommand extends AbstractCommand
     /**
      * @param EntityViewModel $entity
      * @param ParameterBagInterface $requestContent
-     * @return array
+     * @return bool
      * @throws EntityIdNotFoundException
      */
     public function executeApi(
         EntityViewModel $entity,
         ParameterBagInterface $requestContent
-    ): array {
+    ): bool {
         $id = $requestContent->get("id");
-        $entityData = $this->entityManager->find($entity->getClass(), $id);
-        if ($entityData) {
+        $entityData = $this->entityManager->find($requestContent, $entity->getClass(), $id, true);
 
+        if ($entityData) {
             $entityDataEvent = $this->eventDispatcher->dispatch(new DeleteCommandPreDelete(
-                $entity->getName(),
+                $entity->getClass(),
                 $entityData
             ));
 
-            $this->entityManager->delete($entity->getClass(), $id);
+            $this->entityManager->delete(
+                $entityDataEvent->getEntityData(),
+                $entity->getClass(),
+                $entity->getName(),
+                $id,
+                true
+            );
 
             $this->eventDispatcher->dispatch(new DeleteCommandPostDelete(
-                $entity->getName(),
+                $entity->getClass(),
                 $entityDataEvent->getEntityData()
             ));
 
-            return [
-                "success" => true,
-                "message" => "Entity {$id} deleted"
-            ];
+            return true;
         } else {
             throw new EntityIdNotFoundException($id);
         }

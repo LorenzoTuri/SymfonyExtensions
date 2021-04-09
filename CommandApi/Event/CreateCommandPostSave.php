@@ -6,33 +6,33 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Contracts\EventDispatcher\Event;
 
 class CreateCommandPostSave extends Event {
-    protected $entityName;
+    protected $type;
     protected $entityData;
 
     public function __construct(
-        string $entityName,
+        string $type,
         $entityData
     )
     {
-        $this->entityName = $entityName;
+        $this->type = $type;
         $this->entityData = $entityData;
     }
 
     /**
-     * @return string
+     * @return mixed
      */
-    public function getEntityName(): string
+    public function getType()
     {
-        return $this->entityName;
+        return $this->type;
     }
 
     /**
-     * @param string $entityName
+     * @param mixed $type
      * @return CreateCommandPostSave
      */
-    public function setEntityName(string $entityName): CreateCommandPostSave
+    public function setType($type)
     {
-        $this->entityName = $entityName;
+        $this->type = $type;
         return $this;
     }
 

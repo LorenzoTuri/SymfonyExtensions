@@ -2,19 +2,18 @@
 
 namespace Lturi\SymfonyExtensions\DependencyInjection;
 
-use Doctrine\Common\Annotations\AnnotationReader;
 use Exception;
 use Lturi\SymfonyExtensions\Framework\Constants;
-use Lturi\SymfonyExtensions\JsonApi\Annotation\Entity;
-use Lturi\SymfonyExtensions\JsonApi\Controller\JsonapiController;
+use Lturi\SymfonyExtensions\Framework\EntityUtility\EntitiesDescriptor;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\Config\FileLocator;
-use function Symfony\Component\String\u;
 
 class LturiSymfonyExtensionsExtension extends Extension
 {
+    protected $container;
+
     /**
      * @param array            $configs
      * @param ContainerBuilder $container
@@ -23,6 +22,8 @@ class LturiSymfonyExtensionsExtension extends Extension
      */
 	public function load(array $configs, ContainerBuilder $container)
 	{
+	    $this->container = $container;
+
 		$loader = new YamlFileLoader(
 			$container,
 			new FileLocator(__DIR__.'/../Resources/config')
@@ -44,59 +45,19 @@ class LturiSymfonyExtensionsExtension extends Extension
         $container->setParameter("graphQLApiEntities", $config['graphQLApi']);
 	}
 
-	private function completeConfig(array $config) {
-        $reader = new AnnotationReader();
+	private function completeConfig(array $config): array
+    {
         foreach ($config["jsonApi"] as $index => $class) {
-            $reflectionClass = new \ReflectionClass($class);
-            /** @var Entity $entityDescription */
-            $entityDescription = $reader->getClassAnnotation($reflectionClass, Entity::class);
-
-            $entityConfig["class"] = $class;
-            $entityConfig["name"] = $entityDescription->name ?? u($class)->camel()->toString();
-            $entityConfig["path"] = str_replace("_","-", $entityDescription->path ?? u($class)->snake()->toString());
-            $entityConfig["controller"] = $entityDescription->controller ?? JsonapiController::class;
-            $entityConfig["versions"] = $entityDescription->versions ?? ['v1'];
-
-            $config["jsonApi"][$index] = $entityConfig;
+            $config["jsonApi"][$index] = EntitiesDescriptor::describeEntity($class);
         }
         foreach ($config["restApi"] as $index => $class) {
-            $reflectionClass = new \ReflectionClass($class);
-            /** @var Entity $entityDescription */
-            $entityDescription = $reader->getClassAnnotation($reflectionClass, Entity::class);
-
-            $entityConfig["class"] = $class;
-            $entityConfig["name"] = $entityDescription->name ?? u($class)->camel()->toString();
-            $entityConfig["path"] = str_replace("_","-", $entityDescription->path ?? u($class)->snake()->toString());
-            $entityConfig["controller"] = $entityDescription->controller ?? JsonapiController::class;
-            $entityConfig["versions"] = $entityDescription->versions ?? ['v1'];
-
-            $config["restApi"][$index] = $entityConfig;
+            $config["restApi"][$index] = EntitiesDescriptor::describeEntity($class);
         }
         foreach ($config["commandApi"] as $index => $class) {
-            $reflectionClass = new \ReflectionClass($class);
-            /** @var Entity $entityDescription */
-            $entityDescription = $reader->getClassAnnotation($reflectionClass, Entity::class);
-
-            $entityConfig["class"] = $class;
-            $entityConfig["name"] = $entityDescription->name ?? u($class)->camel()->toString();
-            $entityConfig["path"] = str_replace("_","-", $entityDescription->path ?? u($class)->snake()->toString());
-            $entityConfig["controller"] = $entityDescription->controller ?? JsonapiController::class;
-            $entityConfig["versions"] = $entityDescription->versions ?? ['v1'];
-
-            $config["commandApi"][$index] = $entityConfig;
+            $config["commandApi"][$index] = EntitiesDescriptor::describeEntity($class);
         }
         foreach ($config["graphQLApi"] as $index => $class) {
-            $reflectionClass = new \ReflectionClass($class);
-            /** @var Entity $entityDescription */
-            $entityDescription = $reader->getClassAnnotation($reflectionClass, Entity::class);
-
-            $entityConfig["class"] = $class;
-            $entityConfig["name"] = $entityDescription->name ?? u($class)->camel()->toString();
-            $entityConfig["path"] = str_replace("_","-", $entityDescription->path ?? u($class)->snake()->toString());
-            $entityConfig["controller"] = $entityDescription->controller ?? JsonapiController::class;
-            $entityConfig["versions"] = $entityDescription->versions ?? ['v1'];
-
-            $config["graphQLApi"][$index] = $entityConfig;
+            $config["graphQLApi"][$index] = EntitiesDescriptor::describeEntity($class);
         }
         return $config;
     }

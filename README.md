@@ -56,3 +56,43 @@ completion of parts:
 - restApi: 0
 - rest: to be refactored into restApi/framework and the removed
 - package.json/composer.json: TO CHECK FOR DEPENDENCIES
+
+
+User management:\
+<a>https://symfony.com/doc/current/security.html</a>
+
+> composer require symfony/security-bundle
+
+```yaml
+# config/packages/security.yaml
+security:
+    enable_authenticator_manager: true
+
+    providers:
+        # this name is casual, class and property should match to this snippet
+        app_user_provider:
+            entity:
+                class: Lturi\SymfonyExtensions\Framework\Entity\User
+                property: username
+    encoders:
+      Lturi\SymfonyExtensions\Framework\Entity\User:
+        # insert whatever algoritm you want
+        algorithm: sha512
+```
+
+## Command api example
+Data for create/update goes into "data", while criterias into "filters"
+```shell
+php bin/console command-api:create site --content '{\"data\": {\"name\": \"test api create\", \"baseUrl\":\"test\", \"siteUrls\":[{\"url\":\"testSiteUrl\"}]}}'
+```
+Results:
+```json
+{"id":"01F1X6WA7ZMF9CZP73C1EANMWA","baseUrl":"test","dateCreate":"2021-03-28T22:02:22+02:00","dateUpdate":null,"lastCheckDate":null,"checking":false,"siteUrls":[{"id":"01F1X6WA84RTRHG7M0JRJYM19M","url":"testSiteUrl","site":"000000000debbbe70000000003d488a4","siteUrlChecks":[],"siteUrlSummaries":[]}]}
+```
+
+
+# contraints:
+if related entity, add on the property this annotation
+```
+Symfony\Component\Validator\Constraints\Valid
+```

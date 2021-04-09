@@ -1,6 +1,6 @@
 <?php
 
-namespace Lturi\SymfonyExtensions\Framework\Entity;
+namespace Lturi\SymfonyExtensions\Framework\EntityUtility;
 
 abstract class AbstractEntitiesDescriptor {
     public abstract function describe(string $cachedKey, array $items) : array;

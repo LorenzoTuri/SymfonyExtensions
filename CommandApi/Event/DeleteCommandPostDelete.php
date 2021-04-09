@@ -6,33 +6,33 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Contracts\EventDispatcher\Event;
 
 class DeleteCommandPostDelete extends Event {
-    protected $entityName;
+    protected $type;
     protected $entityData;
 
     public function __construct(
-        string $entityName,
+        string $type,
         $entityData
     )
     {
-        $this->entityName = $entityName;
+        $this->type = $type;
         $this->entityData = $entityData;
     }
 
     /**
-     * @return string
+     * @return mixed
      */
-    public function getEntityName(): string
+    public function getType()
     {
-        return $this->entityName;
+        return $this->type;
     }
 
     /**
-     * @param string $entityName
-     * @return DeleteCommandPreDelete
+     * @param mixed $type
+     * @return DeleteCommandPostDelete
      */
-    public function setEntityName(string $entityName): DeleteCommandPreDelete
+    public function setType($type)
     {
-        $this->entityName = $entityName;
+        $this->type = $type;
         return $this;
     }
 

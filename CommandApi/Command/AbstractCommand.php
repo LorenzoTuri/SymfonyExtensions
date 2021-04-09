@@ -2,15 +2,14 @@
 
 namespace Lturi\SymfonyExtensions\CommandApi\Command;
 
-use Doctrine\ORM\EntityManagerInterface;
-use Exception;
 use Lturi\SymfonyExtensions\CommandApi\Event\AbstractCommandFilterAttributes;
 use Lturi\SymfonyExtensions\CommandApi\Event\AbstractCommandFilterCommandResults;
 use Lturi\SymfonyExtensions\CommandApi\Event\AbstractCommandFilterEntity;
+use Lturi\SymfonyExtensions\Framework\Entity\User;
+use Lturi\SymfonyExtensions\Framework\EntityUtility\EntityManagerInterface;
 use Lturi\SymfonyExtensions\Framework\Exception\EntityNotFoundException;
 use Lturi\SymfonyExtensions\Framework\Service\Normalizer\StreamNormalizer;
-use Lturi\SymfonyExtensions\Framework\Entity\AbstractEntitiesDescriptor;
-use Lturi\SymfonyExtensions\Framework\Entity\EntityManagerDoctrine;
+use Lturi\SymfonyExtensions\Framework\EntityUtility\AbstractEntitiesDescriptor;
 use Lturi\SymfonyExtensions\Rest\ViewModel\EntityViewModel;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -20,6 +19,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
+use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -29,6 +31,7 @@ use Symfony\Component\Serializer\Normalizer\ArrayDenormalizer;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Normalizer\UidNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Throwable;
 
@@ -47,12 +50,11 @@ abstract class AbstractCommand extends Command
         $entities,
         AbstractEntitiesDescriptor $entitiesDescriptor,
         EntityManagerInterface $entityManager,
-        EventDispatcherInterface $eventDispatcher
-    )
-    {
+        EventDispatcherInterface $eventDispatcher,
+    ) {
         $this->entities = $entities;
         $this->entitiesDescriptor = $entitiesDescriptor;
-        $this->entityManager = new EntityManagerDoctrine($entityManager);
+        $this->entityManager = $entityManager;
         $this->eventDispatcher = $eventDispatcher;
 
         $this->entitiesDescription = $this->entitiesDescriptor->describe("cachedCommandApiEntities", $this->entities);
@@ -64,17 +66,8 @@ abstract class AbstractCommand extends Command
         ];
         $encoders = [new JsonEncoder(), new XmlEncoder(), new CsvEncoder(), new YamlEncoder()];
         $normalizers = [
-            new GetSetMethodNormalizer(
-                null,
-                null,
-                null,
-                null,
-                null,
-                $defaultContext
-            ),
-            new ArrayDenormalizer(),
+            new UidNormalizer(),
             new DateTimeNormalizer(),
-            new StreamNormalizer(),
             new ObjectNormalizer(
                 null,
                 null,
@@ -84,6 +77,16 @@ abstract class AbstractCommand extends Command
                 null,
                 $defaultContext
             ),
+            new GetSetMethodNormalizer(
+                null,
+                null,
+                null,
+                null,
+                null,
+                $defaultContext
+            ),
+            new ArrayDenormalizer(),
+            new StreamNormalizer(),
         ];
         $this->serializer = new Serializer($normalizers, $encoders);
 
@@ -127,7 +130,7 @@ abstract class AbstractCommand extends Command
             if (!$entity) throw new EntityNotFoundException($entityName);
 
             $entityEvent = $this->eventDispatcher->dispatch(new AbstractCommandFilterEntity(
-                $entityName,
+                $entity->getClass(),
                 $entity
             ));
             $results = $this->executeApi(
@@ -135,11 +138,10 @@ abstract class AbstractCommand extends Command
                 $initializeCommandAttributes->getContent()
             );
             $resultsEvent = $this->eventDispatcher->dispatch(new AbstractCommandFilterCommandResults(
-                $entityName,
+                $entity->getClass(),
                 $results
             ));
 
-            // TODO: problem here... not testable on windows, since internally uses pcntl, not supported on windows...
             $results = $this->serializer->serialize(
                 $resultsEvent->getResults(),
                 $responseType
@@ -147,6 +149,9 @@ abstract class AbstractCommand extends Command
             $output->write($results);
             return Command::SUCCESS;
         } catch (Throwable $exception) {
+            // TODO: remove before commit
+            dump($exception);
+            die();
             $results = $this->serializer->serialize($exception, $responseType);
             $output->write($results);
             return Command::FAILURE;
@@ -180,10 +185,9 @@ abstract class AbstractCommand extends Command
     protected function loadContent(InputInterface $input): ParameterBag
     {
         $content = $input->getOption("content");
-        try {
-            $content = json_decode($content, true);
-            if (!$content) $content = [];
-        } catch (Exception $exception) {}
+        $content = json_decode($content, true);
+        if (!$content) $content = [];
+
         return new ParameterBag(array_merge(
             $input->getArguments(),
             $input->getOptions(),

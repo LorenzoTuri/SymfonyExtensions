@@ -8,8 +8,6 @@ use Lturi\SymfonyExtensions\Framework\Exception\EntityIdNotFoundException;
 use Lturi\SymfonyExtensions\Rest\ViewModel\EntityViewModel;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\Serializer\Exception\ExceptionInterface;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 
 class UpdateCommand extends AbstractCommand
 {
@@ -31,7 +29,7 @@ class UpdateCommand extends AbstractCommand
      * @param EntityViewModel $entity
      * @param ParameterBagInterface $requestContent
      * @return mixed
-     * @throws ExceptionInterface|EntityIdNotFoundException
+     * @throws EntityIdNotFoundException
      */
     public function executeApi(
         EntityViewModel $entity,
@@ -40,26 +38,33 @@ class UpdateCommand extends AbstractCommand
     {
         $id = $requestContent->get("id");
         $entityClass = $entity->getClass();
-        $entityData = $this->entityManager->find($entityClass, $id);
+        $entityData = $this->entityManager->find(
+            $requestContent,
+            $entityClass,
+            $entity->getName(),
+            $id,
+            true
+        );
+
         if ($entityData) {
             $entityDataEvent = $this->eventDispatcher->dispatch(new UpdateCommandPreUpdate(
-                $entity->getName(),
+                $entityClass,
                 $entityData,
                 $requestContent
             ));
+            $requestContent = $entityDataEvent->getRequestContent();
 
-            $entityData = $this->serializer->denormalize(
-                $entityDataEvent->getRequestContent()->all(),
+            $this->entityManager->save(
+                $requestContent,
                 $entityClass,
-                'json',
-                [
-                    AbstractNormalizer::OBJECT_TO_POPULATE => $entityDataEvent->getEntityData(),
-                ]
+                $entity->getName(),
+                $entityDataEvent->getEntityData()->getId(),
+                $requestContent->get("data"),
+                true
             );
-            $this->entityManager->save($entityData);
 
             $entityDataEvent = $this->eventDispatcher->dispatch(new UpdateCommandPostUpdate(
-                $entity->getName(),
+                $entity->getClass(),
                 $entityData
             ));
 

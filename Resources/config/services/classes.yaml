@@ -30,7 +30,7 @@ services:
     arguments: ~
 
   # Entities descriptor (entity, properties etc)
-  Lturi\SymfonyExtensions\Framework\Entity\EntitiesDescriptor:
+  Lturi\SymfonyExtensions\Framework\EntityUtility\EntitiesDescriptor:
     arguments: ["@Symfony\\Contracts\\Cache\\CacheInterface"]
     public: true
     tags:

@@ -6,17 +6,17 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Contracts\EventDispatcher\Event;
 
 class UpdateCommandPreUpdate extends Event {
-    protected $entityName;
+    protected $type;
     protected $entityData;
     protected $requestContent;
 
     public function __construct(
-        string $entityName,
+        string $type,
         $entityData,
         ParameterBagInterface $requestContent,
     )
     {
-        $this->entityName = $entityName;
+        $this->type = $type;
         $this->entityData = $entityData;
         $this->requestContent = $requestContent;
     }
@@ -24,18 +24,18 @@ class UpdateCommandPreUpdate extends Event {
     /**
      * @return string
      */
-    public function getEntityName(): string
+    public function getType(): string
     {
-        return $this->entityName;
+        return $this->type;
     }
 
     /**
-     * @param string $entityName
-     * @return CreateCommandPostSave
+     * @param string $type
+     * @return UpdateCommandPreUpdate
      */
-    public function setEntityName(string $entityName): CreateCommandPostSave
+    public function setType(string $type): UpdateCommandPreUpdate
     {
-        $this->entityName = $entityName;
+        $this->type = $type;
         return $this;
     }
 

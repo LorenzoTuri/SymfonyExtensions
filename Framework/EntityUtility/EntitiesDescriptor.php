@@ -1,9 +1,12 @@
 <?php
 
-namespace Lturi\SymfonyExtensions\Framework\Entity;
+namespace Lturi\SymfonyExtensions\Framework\EntityUtility;
 
+use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Collections\ArrayCollection;
-use Lturi\SymfonyExtensions\Framework\Constants;
+use Exception;
+use Lturi\SymfonyExtensions\Framework\EntityUtility\Annotation\Entity;
+use Lturi\SymfonyExtensions\JsonApi\Controller\JsonapiController;
 use Lturi\SymfonyExtensions\Rest\ViewModel\EntityPropertyViewModel;
 use Lturi\SymfonyExtensions\Rest\ViewModel\EntityViewModel;
 use Psr\Cache\InvalidArgumentException;
@@ -13,13 +16,16 @@ use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
 use Symfony\Contracts\Cache\CacheInterface;
+use function Symfony\Component\String\u;
 
 class EntitiesDescriptor extends AbstractEntitiesDescriptor {
     protected $cache;
     protected $propertyInfo;
+    protected $reader;
 
-    public function __construct (CacheInterface $cache)
-    {
+    public function __construct (
+        CacheInterface $cache = null
+    ) {
         $this->cache = $cache;
 
         $phpDocExtractor = new PhpDocExtractor();
@@ -31,20 +37,45 @@ class EntitiesDescriptor extends AbstractEntitiesDescriptor {
             [$reflectionExtractor],
             [$reflectionExtractor]
         );
+
     }
 
     /**
-     * @param array $entities
-     *
+     * @param string $type
+     * @return array|null
+     */
+    public static function describeEntity(string $type): ?array
+    {
+        $reader = new AnnotationReader();
+        try {
+            $reflectionClass = new ReflectionClass($type);
+            /** @var Entity $entityDescription */
+            $entityDescription = $reader->getClassAnnotation($reflectionClass, Entity::class);
+
+            $entityConfig["class"] = $type;
+            $entityConfig["name"] = $entityDescription->name ?? u($type)->camel()->toString();
+            $entityConfig["path"] = str_replace("_", "-", $entityDescription->path ?? u($type)->snake()->toString());
+            $entityConfig["controller"] = $entityDescription->controller ?? JsonapiController::class;
+            $entityConfig["versions"] = $entityDescription->versions ?? ['v1'];
+            return $entityConfig;
+        } catch (Exception $exception) {
+            return null;
+        }
+    }
+
+    /**
+     * @param string $cachedKey
+     * @param array $items
      * @return EntityViewModel[]
      * @throws InvalidArgumentException
+     * @throws ReflectionException
      */
-    public function describe(string $cacheKey, array $entities) : array
+    public function describe(string $cachedKey, array $items) : array
     {
-        return $this->cache->get($cacheKey, function () use ($entities) {
+        $callback = function () use ($items) {
             $result = [];
             $names = [];
-            foreach ($entities as $entity) {
+            foreach ($items as $entity) {
                 $entityModel = $this->getEntity($entity);
                 if ($entityModel) {
                     $result[$entity["class"]] = $entityModel;
@@ -53,11 +84,17 @@ class EntitiesDescriptor extends AbstractEntitiesDescriptor {
             }
             $result = $this->normalize($result, $names);
             return $result;
-        });
+        };
+        return
+            $this->cache ?
+            $this->cache->get($cachedKey, $callback) :
+            $callback();
     }
 
 
-    private function getEntity($entity) {
+
+    private function getEntity($entity): ?EntityViewModel
+    {
         if (class_exists($entity["class"])) {
             $entityModel = new EntityViewModel();
             $properties = new ArrayCollection();
@@ -77,7 +114,8 @@ class EntitiesDescriptor extends AbstractEntitiesDescriptor {
         return null;
     }
 
-    private function getEntityProperty($entity, $field) {
+    private function getEntityProperty($entity, $field): ?EntityPropertyViewModel
+    {
         $type = $this->propertyInfo->getTypes($entity["class"], $field);
         if ($type) {
             $property = new EntityPropertyViewModel();
@@ -96,7 +134,8 @@ class EntitiesDescriptor extends AbstractEntitiesDescriptor {
      * @return EntityViewModel[]
      * @throws ReflectionException
      */
-    private function normalize($entities, $names) {
+    private function normalize(array $entities, $names): array
+    {
         $defaultNames = $this->getDefaultNames();
         foreach ($entities as $entity) {
             /** @var EntityPropertyViewModel $property */

@@ -32,8 +32,6 @@ class JsonapiNormalizer extends AbstractNormalizer implements DenormalizerAwareI
     use NormalizerAwareTrait;
 
     /**
-     * EntityNormalizer constructor.
-     *
      * @param EntityViewModel[]                  $entitiesDescription
      * @param ClassMetadataFactoryInterface|null $classMetadataFactory
      * @param NameConverterInterface|null        $nameConverter

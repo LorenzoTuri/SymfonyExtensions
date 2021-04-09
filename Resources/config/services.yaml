@@ -3,6 +3,7 @@ imports:
   - { resource: services/services.yaml }
   - { resource: services/controllers.yaml }
   - { resource: services/commandApi.yaml }
+  - { resource: services/graphQLApi.yaml }
 
 services:
   # Better manage of symfony exceptions, display errors with better graphic (prod) and different ways, example jsons
@@ -17,3 +18,27 @@ services:
       - '@service_container'
     tags:
       - { name: kernel.event_listener, event: kernel.exception }
+
+  Lturi\SymfonyExtensions\Framework\EntityUtility\EntityDataValidator:
+    public: true
+    arguments:
+      - '@doctrine.orm.entity_manager'
+      - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntitiesDescriptor'
+      - '@Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface'
+
+  Lturi\SymfonyExtensions\Framework\EntityUtility\EntityManagerInterface:
+    public: true
+    class: Lturi\SymfonyExtensions\Framework\EntityUtility\EntityManagerDoctrine
+    arguments:
+      - '@doctrine.orm.entity_manager'
+      - '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
+      - '@Symfony\Component\Validator\Validator\ValidatorInterface'
+      - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntityDataValidator'
+
+  # Voters
+  Lturi\SymfonyExtensions\Framework\EntityUtility\Voter\SuperAdminVoter:
+    public: true
+    arguments:
+      - '@security.access.decision_manager'
+    tags:
+      - { name: security.voter }

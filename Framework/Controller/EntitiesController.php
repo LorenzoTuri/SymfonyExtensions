@@ -3,7 +3,7 @@
 namespace Lturi\SymfonyExtensions\Framework\Controller;
 
 use Lturi\SymfonyExtensions\Framework\Constants;
-use Lturi\SymfonyExtensions\Framework\Entity\AbstractEntitiesDescriptor;
+use Lturi\SymfonyExtensions\Framework\EntityUtility\AbstractEntitiesDescriptor;
 use Lturi\SymfonyExtensions\Framework\Service\Response\ApiResponse;
 use Lturi\SymfonyExtensions\Framework\Service\Response\CacheableApiResponse;
 use Psr\Container\ContainerInterface;

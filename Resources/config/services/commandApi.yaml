@@ -8,8 +8,8 @@ services:
     autowire: true
     arguments:
       - '%commandApiEntities%'
-      - '@Lturi\SymfonyExtensions\Framework\Entity\EntitiesDescriptor'
-      - '@doctrine.orm.entity_manager'
+      - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntitiesDescriptor'
+      - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntityManagerInterface'
       - '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
     tags:
       - { name: 'console.command' }
@@ -22,8 +22,8 @@ services:
     autowire: true
     arguments:
       - '%commandApiEntities%'
-      - '@Lturi\SymfonyExtensions\Framework\Entity\EntitiesDescriptor'
-      - '@doctrine.orm.entity_manager'
+      - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntitiesDescriptor'
+      - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntityManagerInterface'
       - '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
     tags:
       - { name: 'console.command' }
@@ -36,8 +36,8 @@ services:
     autowire: true
     arguments:
       - '%commandApiEntities%'
-      - '@Lturi\SymfonyExtensions\Framework\Entity\EntitiesDescriptor'
-      - '@doctrine.orm.entity_manager'
+      - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntitiesDescriptor'
+      - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntityManagerInterface'
       - '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
     tags:
       - { name: 'console.command' }
@@ -50,8 +50,8 @@ services:
     autowire: true
     arguments:
       - '%commandApiEntities%'
-      - '@Lturi\SymfonyExtensions\Framework\Entity\EntitiesDescriptor'
-      - '@doctrine.orm.entity_manager'
+      - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntitiesDescriptor'
+      - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntityManagerInterface'
       - '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
     tags:
       - { name: 'console.command' }
@@ -64,8 +64,8 @@ services:
     autowire: true
     arguments:
       - '%commandApiEntities%'
-      - '@Lturi\SymfonyExtensions\Framework\Entity\EntitiesDescriptor'
-      - '@doctrine.orm.entity_manager'
+      - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntitiesDescriptor'
+      - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntityManagerInterface'
       - '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
     tags:
       - { name: 'console.command' }

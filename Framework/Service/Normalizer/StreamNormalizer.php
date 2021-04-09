@@ -12,14 +12,10 @@ use Symfony\Component\Serializer\Normalizer\NormalizerAwareTrait;
 
 class StreamNormalizer extends AbstractNormalizer implements DenormalizerAwareInterface, NormalizationAwareInterface
 {
-    protected $entitiesDescription;
-
     use DenormalizerAwareTrait;
     use NormalizerAwareTrait;
 
     /**
-     * EntityNormalizer constructor.
-     *
      * @param ClassMetadataFactoryInterface|null $classMetadataFactory
      * @param NameConverterInterface|null        $nameConverter
      * @param array|null                         $defaultContext

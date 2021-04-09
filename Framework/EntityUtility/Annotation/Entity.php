@@ -1,10 +1,11 @@
 <?php
 
-namespace Lturi\SymfonyExtensions\JsonApi\Annotation;
+namespace Lturi\SymfonyExtensions\Framework\EntityUtility\Annotation;
 
 use Doctrine\Common\Annotations\Annotation\Required;
 use Doctrine\Common\Annotations\Annotation\Target;
 
+// TODO: define fields based on the "scope" -> for example jsonApi should have it's properties for controller etc...
 /**
  * @Annotation
  * @Target("CLASS")

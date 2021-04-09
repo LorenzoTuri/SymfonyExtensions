@@ -6,33 +6,33 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Contracts\EventDispatcher\Event;
 
 class GetCommandPreGet extends Event {
-    protected $entityName;
+    protected $type;
     protected $id;
 
     public function __construct(
-        string $entityName,
+        string $type,
         $id
     )
     {
-        $this->entityName = $entityName;
+        $this->type = $type;
         $this->id = $id;
     }
 
     /**
      * @return string
      */
-    public function getEntityName(): string
+    public function getType(): string
     {
-        return $this->entityName;
+        return $this->type;
     }
 
     /**
-     * @param string $entityName
-     * @return CreateCommandPreSave
+     * @param string $type
+     * @return GetCommandPreGet
      */
-    public function setEntityName(string $entityName): CreateCommandPreSave
+    public function setType(string $type): GetCommandPreGet
     {
-        $this->entityName = $entityName;
+        $this->type = $type;
         return $this;
     }
 

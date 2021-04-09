@@ -6,33 +6,33 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Contracts\EventDispatcher\Event;
 
 class AbstractCommandFilterEntity extends Event {
-    protected $entityName;
+    protected $type;
     protected $entity;
 
     public function __construct(
-        $entityName,
+        $type,
         $entity
     )
     {
-        $this->entityName = $entityName;
+        $this->type = $type;
         $this->entity = $entity;
     }
 
     /**
      * @return mixed
      */
-    public function getEntityName()
+    public function getType()
     {
-        return $this->entityName;
+        return $this->type;
     }
 
     /**
-     * @param mixed $entityName
+     * @param mixed $type
      * @return AbstractCommandFilterEntity
      */
-    public function setEntityName($entityName)
+    public function setType($type)
     {
-        $this->entityName = $entityName;
+        $this->type = $type;
         return $this;
     }
 

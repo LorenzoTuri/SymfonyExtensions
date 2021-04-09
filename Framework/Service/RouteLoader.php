@@ -3,12 +3,13 @@
 namespace Lturi\SymfonyExtensions\Framework\Service;
 
 use Lturi\SymfonyExtensions\Framework\Constants;
-use Lturi\SymfonyExtensions\Framework\Entity\EntitiesDescriptor;
-use Lturi\SymfonyExtensions\Framework\Controller\EntitiesController;
+use Lturi\SymfonyExtensions\Framework\EntityUtility\EntitiesDescriptor;
 use Lturi\SymfonyExtensions\Framework\Controller\RoutesController;
 use Lturi\SymfonyExtensions\Framework\Controller\TranslationController;
-use Lturi\SymfonyExtensions\JsonApi\Entity\RouteDescriptor;
+use Lturi\SymfonyExtensions\GraphQLApi\Entity\RouteDescriptor as GraphQLRouteDescriptor;
+use Lturi\SymfonyExtensions\JsonApi\Entity\RouteDescriptor as JsonApiRouteDescriptor;
 use Psr\Cache\InvalidArgumentException;
+use ReflectionException;
 use Symfony\Component\Config\Loader\Loader;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Routing\Route;
@@ -18,16 +19,19 @@ class RouteLoader extends Loader
 {
     protected $container;
     protected $entityDescriptor;
-    protected $routeDescriptor;
+    protected $jsonApiRouteDescriptor;
+    protected $graphQLRouteDescriptor;
 
     public function __construct (
         ContainerInterface $container,
         EntitiesDescriptor $entitiesDescriptor,
-        RouteDescriptor $routeDescriptor
+        JsonApiRouteDescriptor $jsonApiRouteDescriptor,
+        GraphQLRouteDescriptor $graphQLRouteDescriptor
     ) {
         $this->container = $container;
         $this->entityDescriptor = $entitiesDescriptor;
-        $this->routeDescriptor = $routeDescriptor;
+        $this->jsonApiRouteDescriptor = $jsonApiRouteDescriptor;
+        $this->graphQLRouteDescriptor = $graphQLRouteDescriptor;
     }
 
     /**
@@ -36,8 +40,9 @@ class RouteLoader extends Loader
      *
      * @return RouteCollection
      * @throws InvalidArgumentException
+     * @throws ReflectionException
      */
-    public function load($resource, string $type = null)
+    public function load($resource, string $type = null): RouteCollection
     {
         $routes = new RouteCollection();
         if ($this->container->getParameter(Constants::LOAD_ROUTES)) {
@@ -67,7 +72,10 @@ class RouteLoader extends Loader
         }
         $entities = $this->container->getParameter("jsonApiEntities");
         $entitiesDescription = $this->entityDescriptor->describe("cachedJsonApiEntities", $entities);
-        $entityRoutes = $this->routeDescriptor->describe($entities, $entitiesDescription);
+        $entityRoutes = $this->jsonApiRouteDescriptor->describe($entities, $entitiesDescription);
+        $routes->addCollection($entityRoutes);
+
+        $entityRoutes = $this->graphQLRouteDescriptor->describe();
         $routes->addCollection($entityRoutes);
 
         // TODO: move some of the default routes to the routes.yaml
@@ -83,7 +91,8 @@ class RouteLoader extends Loader
         return $resource == "lturi_symfony_extensions";
     }
 
-    private function generateRoute($path, $controller) {
+    private function generateRoute($path, $controller): Route
+    {
         return new Route(
             $path,
             [ '_controller' => $controller ],
