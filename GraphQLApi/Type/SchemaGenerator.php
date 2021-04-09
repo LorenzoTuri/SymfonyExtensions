@@ -3,24 +3,18 @@
 namespace Lturi\SymfonyExtensions\GraphQLApi\Type;
 
 use DateTimeInterface;
-use Fourtwosix\Entity\SiteUrl;
-use GraphQL\Error\InvariantViolation;
 use GraphQL\Type\Definition\FieldArgument;
-use GraphQL\Type\Definition\FieldDefinition;
-use GraphQL\Type\Definition\InputObjectType;
 use GraphQL\Type\Definition\ListOfType;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\ScalarType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
-use GraphQL\Utils\Utils;
 use ReflectionClass;
 use ReflectionException;
 use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
-use function Symfony\Component\String\u;
 
 // TODO: cache???
 class SchemaGenerator {
@@ -212,7 +206,6 @@ class SchemaGenerator {
             $typeName = array_reduce($this->entitiesDefinition, function($carry, $entityDefinition) use ($className) {
                 return $carry ? $carry : ($entityDefinition["class"] == $className ? $entityDefinition["name"] : null);
             }) ?? $className;
-            $typeName = u($typeName)->camel()->title()->toString();
             if (isset($this->createdTypes[$typeName])) return $this->createdTypes[$typeName];
 
             if (is_subclass_of($typeName, Type::class)) {
