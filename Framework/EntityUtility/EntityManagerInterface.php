@@ -20,7 +20,7 @@ interface EntityManagerInterface {
         string $type,
         string $entityName,
         mixed $id,
-        bool $removeAuthorizationCheck
+        bool $removeAuthorizationCheck = false
     ): mixed;
 
     /**
@@ -37,7 +37,7 @@ interface EntityManagerInterface {
         string $type,
         string $entityName,
         mixed $id,
-        bool $removeAuthorizationCheck
+        bool $removeAuthorizationCheck = false
     ): bool;
 
     /**
@@ -53,7 +53,7 @@ interface EntityManagerInterface {
         string $type,
         string $entityName,
         array $requestContent,
-        bool $removeAuthorizationCheck
+        bool $removeAuthorizationCheck = false
     ): ?Traversable;
 
     /**
@@ -71,6 +71,6 @@ interface EntityManagerInterface {
         string $entityName,
         mixed $id,
         array $requestContent,
-        bool $removeAuthorizationCheck
+        bool $removeAuthorizationCheck = false
     ): mixed;
 }

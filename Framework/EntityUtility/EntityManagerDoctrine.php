@@ -21,7 +21,6 @@ use Lturi\SymfonyExtensions\Framework\Exception\UnauthorizedUserException;
 use Lturi\SymfonyExtensions\Framework\Exception\UnrecognizableFilterException;
 use Lturi\SymfonyExtensions\Framework\Service\Normalizer\EntityNormalizer;
 use Lturi\SymfonyExtensions\Framework\Service\Normalizer\StreamNormalizer;
-use ReflectionException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
@@ -36,6 +35,7 @@ use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 // TODO: hei i write here but...  implements fucking traits, and support most used...
+// TODO: and... what about cache??
 class EntityManagerDoctrine implements EntityManagerInterface {
     protected $entityManager;
     protected $eventDispatcher;
@@ -103,7 +103,7 @@ class EntityManagerDoctrine implements EntityManagerInterface {
             $id,
             (
                 $removeAuthorizationCheck ||
-                $this->entityDataValidator->validateData(
+                (bool)$this->entityDataValidator->validateData(
                     $parameterBag,
                     "entityManager",
                     "get",
@@ -149,7 +149,7 @@ class EntityManagerDoctrine implements EntityManagerInterface {
             $requestContent,
             (
                 $removeAuthorizationCheck ||
-                $this->entityDataValidator->validateData(
+                (bool)$this->entityDataValidator->validateData(
                     $parameterBag,
                     "entityManager",
                     "list",
@@ -195,7 +195,7 @@ class EntityManagerDoctrine implements EntityManagerInterface {
             $id,
             (
                 $removeAuthorizationCheck ||
-                $this->entityDataValidator->validateData(
+                (bool)$this->entityDataValidator->validateData(
                     $parameterBag,
                     "entityManager",
                     "delete",
@@ -261,7 +261,7 @@ class EntityManagerDoctrine implements EntityManagerInterface {
             $entityData,
             (
                 $removeAuthorizationCheck ||
-                $this->entityDataValidator->validateData(
+                (bool)$this->entityDataValidator->validateData(
                     $parameterBag,
                     "entityManager",
                     "save",

@@ -149,9 +149,6 @@ abstract class AbstractCommand extends Command
             $output->write($results);
             return Command::SUCCESS;
         } catch (Throwable $exception) {
-            // TODO: remove before commit
-            dump($exception);
-            die();
             $results = $this->serializer->serialize($exception, $responseType);
             $output->write($results);
             return Command::FAILURE;

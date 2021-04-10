@@ -48,7 +48,8 @@ class EntityDataValidator {
      * @param string $entityName
      * @param string $type
      * @param array|null $requestContent
-     * @return bool
+     * @param bool $throwOnUnauthorized
+     * @return array|null
      * @throws UnauthorizedUserException
      */
     public function validateData(
@@ -57,23 +58,29 @@ class EntityDataValidator {
         string $action,
         string $entityName,
         string $type,
-        ?array $requestContent
-    ): bool
+        ?array $requestContent,
+        bool $throwOnUnauthorized = true
+    ): ?array
     {
-        // For starters, let's check for authorizationChecker of $type
-        $this->throwOnUnauthorized(
-            $parameterBag,
-            $prefix,
-            $action,
-            $entityName,
-            $type,
-            $requestContent
-        );
+        try {
+            // For starters, let's check for authorizationChecker of $type
+            $this->throwOnUnauthorized(
+                $parameterBag,
+                $prefix,
+                $action,
+                $entityName,
+                $type,
+                $requestContent
+            );
+        } catch (Exception $exception) {
+            if ($throwOnUnauthorized) throw $exception;
+            else return null;
+        }
 
         // Then go into recursion, checking only $requestContent shared properties.
         $properties = $this->propertyInfo->getProperties($type);
-        $sharedProperties = $requestContent ? array_filter($properties, function($property) {
-            return isset($requestContent[$property]);
+        $sharedProperties = $requestContent ? array_filter($properties, function($property) use ($requestContent) {
+            return array_key_exists($property, $requestContent);
         }) : [];
         foreach ($sharedProperties as $property) {
             $propertyTypes = $this->propertyInfo->getTypes($type, $property);
@@ -81,64 +88,64 @@ class EntityDataValidator {
             /** @var Type $propertyType */
             foreach ($propertyTypes as $propertyType) {
                 $propertyClass = $propertyType->getClassName();
-                $propertyCollectionClass = $propertyType->getCollectionValueType()->getClassName();
-                $propertyEntityDescription = $this->entityDescriptor::describeEntity($propertyCollectionClass);
-                if ($propertyType->isCollection() && $this->isEntity($propertyCollectionClass)) {
-                    foreach ($requestContent[$property] as $requestContentPropertySingle) {
-                        $this->validateData(
-                            $parameterBag,
-                            $prefix,
-                            $action,
-                            $propertyEntityDescription ? $propertyEntityDescription["name"] : null,
-                            $propertyCollectionClass,
-                            $requestContentPropertySingle
-                        );
+                if ($propertyType->isCollection()) {
+                    $propertyCollectionClass = $propertyType->getCollectionValueType()->getClassName();
+                    $propertyEntityDescription = $this->entityDescriptor::describeEntity($propertyCollectionClass);
+                    if ($this->isEntity($propertyCollectionClass)) {
+                        foreach ($requestContent[$property] as $propertyKey => $requestContentPropertySingle) {
+                            $requestContent[$property][$propertyKey] = $this->validateData(
+                                $parameterBag,
+                                $prefix,
+                                $action,
+                                $propertyEntityDescription ? $propertyEntityDescription["name"] : null,
+                                $propertyCollectionClass,
+                                $requestContentPropertySingle,
+                                $throwOnUnauthorized
+                            );
+                        }
                     }
                 } else if ($this->isEntity($propertyClass)){
                     $propertyClassDescription = $this->entityDescriptor::describeEntity($propertyClass);
-                    $this->validateData(
+                    $requestContent[$property] = $this->validateData(
                         $parameterBag,
                         $prefix,
                         $action,
                         $propertyClassDescription ? $propertyClassDescription["name"] : null,
                         $propertyClass,
-                        $requestContent[$property]
+                        $requestContent[$property],
+                        $throwOnUnauthorized
                     );
                 }
             }
         }
-        return true;
-    }
-
-    public function removeInvalidData(
-        string $type,
-        ?array $requestContent
-    ) {
-
+        return $requestContent;
     }
 
     /**
      * @param ParameterBagInterface $parameterBag
-     * @param string $prefix
-     * @param string $action
-     * @param string $entityName
-     * @param string $type
-     * @param array|null $requestContent
+     * @param string|null $prefix
+     * @param string|null $action
+     * @param string|null $entityName
+     * @param string|null $type
+     * @param array $requestContent
      * @throws UnauthorizedUserException
      */
     protected function throwOnUnauthorized(
         ParameterBagInterface $parameterBag,
-        string $prefix,
-        string $action,
-        string $entityName,
-        string $type,
-        ?array $requestContent
+        ?string $prefix,
+        ?string $action,
+        ?string $entityName,
+        ?string $type,
+        array $requestContent
     ) {
-        if (!$this->authorizationChecker->isGranted([
-            sprintf("%s.%s", $prefix, $action),
-            sprintf("%s.%s", $prefix, $entityName),
-            sprintf("%s.%s.%s", $prefix, $action, $entityName)
-        ], [
+        if (!$this->authorizationChecker->isGranted(array_unique(array_filter([
+            implode(".",array_filter([$action])),
+            implode(".",array_filter([$entityName])),
+            implode(".",array_filter([$action, $entityName])),
+            implode(".",array_filter([$prefix, $action])),
+            implode(".",array_filter([$prefix, $entityName])),
+            implode(".",array_filter([$prefix, $action, $entityName]))
+        ])), [
             "parameters" => $parameterBag,
             "type" => $type,
             "entityData" => $requestContent
@@ -158,7 +165,7 @@ class EntityDataValidator {
             $classAnnotation = $this->reader->getClassAnnotations($reflectionClass);
             return in_array(Entity::class, array_map("get_class", $classAnnotation));
         } catch (Exception $exception) {
-            return true;
+            return false;
         }
     }
 }

@@ -51,10 +51,10 @@ CachableApiResponse will be cached.
 
 completion of parts:
 - commandApi: completed
-- graphQLApi: 0%
-- jsonApi: 66%
+- graphQLApi: 66%
+- jsonApi: 66% to be rafactored, is now broken
 - restApi: 0
-- rest: to be refactored into restApi/framework and the removed
+- rest: to be refactored into restApi/framework and then removed
 - package.json/composer.json: TO CHECK FOR DEPENDENCIES
 
 

@@ -6,7 +6,9 @@ services:
       - '%commandApiEntities%'
       - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntitiesDescriptor'
       - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntityManagerInterface'
-      #- '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
+      - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntityDataValidator'
+      - '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
+      - '%env(resolve:APP_ENV)%'
     tags:
       - { name: controller.service_arguments }
 

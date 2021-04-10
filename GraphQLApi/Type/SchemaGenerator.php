@@ -4,6 +4,7 @@ namespace Lturi\SymfonyExtensions\GraphQLApi\Type;
 
 use DateTimeInterface;
 use GraphQL\Type\Definition\FieldArgument;
+use GraphQL\Type\Definition\InputObjectType;
 use GraphQL\Type\Definition\ListOfType;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\ResolveInfo;
@@ -17,6 +18,8 @@ use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
 
 // TODO: cache???
+// TODO: save schema as textual version, the return the textual version loaded. useful for caching and also to remove
+//  unnecessary problems related to my ObjectTypes... let graphQL handle the object creation, not my code.
 class SchemaGenerator {
     protected $entitiesDefinition;
     protected $createdTypes = [];
@@ -50,6 +53,28 @@ class SchemaGenerator {
         callable $callableDelete,
         callable $callableSave
     ): Schema {
+        /* Let's load before all entities... */
+        foreach ($this->entitiesDefinition as $entityDefinition) {
+            $this->detectComplexType($entityDefinition["class"]);
+        }
+        // Now let's complete the object definition before building the true schema by iterating
+        // the created types and injecting args
+        /** @var ObjectType $createdType */
+        foreach ($this->createdTypes as $createdType) {
+            if ($createdType instanceof ObjectType) {
+                foreach ($createdType->getFields() as $field) {
+                    if ($field->getType() instanceof ObjectType) {
+                        $field->args = array_merge(
+                            $field->args,
+                            FieldArgument::createMap(array_map(function($field) {
+                                return $this->detectInputTypeFromField($field);
+                            }, $field->getType()->config["fields"]))
+                        );
+                    }
+                }
+            }
+        }
+
         $queryFields = [];
         $mutationFields = [];
         foreach ($this->entitiesDefinition as $entityDefinition) {
@@ -58,11 +83,15 @@ class SchemaGenerator {
 
             $entityType = $this->detectComplexType($entityClass);
             $entityFields = $entityType->config["fields"] ?? [];
+            $entityArguments = [];
+            foreach ($entityFields as $key =>$entityField) {
+                $entityArguments[$key] = $this->detectInputTypeFromField($entityField);
+            }
 
             $queryFields[$entityName] = [
                 'type' => $entityType,
                 'args' => array_merge(
-                    $entityFields,
+                    $entityArguments,
                     ['id' => Type::nonNull(Type::string())]
                 ),
                 'resolve' => function ($objectValue, $args, $context, ResolveInfo $info) use ($callableGet, $entityName, $entityClass) {
@@ -70,12 +99,14 @@ class SchemaGenerator {
                 }
             ];
 
-            // TODO: pagination missing
             $queryFields[$entityName."List"] = [
                 'type' => Type::listOf($entityType),
                 'args' => array_merge(
-                    $entityFields,
-                    ['id' => Type::string()]
+                    $entityArguments,
+                    ['id' => Type::string()],
+                    ['filters' => Type::string()],
+                    ['limit' => Type::int()],
+                    ['page' => Type::int()]
                 ),
                 'resolve' => function ($objectValue, $args, $context, ResolveInfo $info) use ($callableList, $entityName, $entityClass) {
                     return $callableList($entityClass, $entityName, $args, $context);
@@ -86,7 +117,7 @@ class SchemaGenerator {
                 'name' => $entityName.'Update',
                 'type' => $entityType,
                 'args' => array_merge(
-                    $entityFields,
+                    $entityArguments,
                     ['id' => Type::nonNull(Type::string())]
                 ),
                 'resolve' => function ($objectValue, $args, $context, ResolveInfo $info) use ($callableSave, $entityName, $entityClass) {
@@ -97,7 +128,7 @@ class SchemaGenerator {
             $mutationFields[$entityName.'Create'] = [
                 'name' => $entityName.'Create',
                 'type' => $entityType,
-                'args' => $entityFields,
+                'args' => $entityArguments,
                 'resolve' => function ($objectValue, $args, $context, ResolveInfo $info) use ($callableSave, $entityName, $entityClass) {
                     return $callableSave($entityClass, $entityName, $args, $context);
                 }
@@ -107,29 +138,13 @@ class SchemaGenerator {
                 'name' => $entityName.'Delete',
                 'type' => $entityType,
                 'args' => array_merge(
-                    $entityFields,
+                    $entityArguments,
                     ['id' => Type::nonNull(Type::string())]
                 ),
                 'resolve' => function ($objectValue, $args, $context, ResolveInfo $info) use ($callableDelete, $entityName, $entityClass) {
                     return $callableDelete($entityClass, $entityName, $args, $context);
                 }
             ];
-        }
-
-        // Now let's complete the object definition before building the true schema by iterating the created types
-        // and injecting args
-        /** @var ObjectType $createdType */
-        foreach ($this->createdTypes as $createdType) {
-            if ($createdType instanceof ObjectType) {
-                foreach ($createdType->getFields() as $field) {
-                    if ($field->getType() instanceof ObjectType) {
-                        $field->args = array_merge(
-                            $field->args,
-                            FieldArgument::createMap($field->getType()->config["fields"])
-                        );
-                    }
-                }
-            }
         }
 
         return new Schema([
@@ -145,12 +160,20 @@ class SchemaGenerator {
     }
 
     public function callableResolveField($entity, $args, $context, ResolveInfo $info) {
-        if (method_exists($entity, "get".ucfirst($info->fieldName))) {
-            return $entity->{"get".$info->fieldName}();
-        } else if (property_exists($entity, $info->fieldName)) {
-            return $entity->{$info->fieldName};
+        if (is_array($entity)) {
+            if (array_key_exists($info->fieldName, $entity)) {
+                return $entity[$info->fieldName];
+            } else {
+                return null;
+            }
         } else {
-            return null;
+            if (method_exists($entity, "get" . ucfirst($info->fieldName))) {
+                return $entity->{"get" . $info->fieldName}();
+            } else if (property_exists($entity, $info->fieldName)) {
+                return $entity->{$info->fieldName};
+            } else {
+                return null;
+            }
         }
     }
 
@@ -176,15 +199,10 @@ class SchemaGenerator {
      */
     private function detectBuiltinType(string $typeName): ScalarType
     {
-        if ($typeName == "int") {
-            return Type::int();
-        } elseif ($typeName == "bool") {
-            return Type::boolean();
-        } elseif ($typeName == "float") {
-            return Type::float();
-        } else {
-            return Type::string();
-        }
+        if ($typeName == "int") { return Type::int();
+        } elseif ($typeName == "bool") { return Type::boolean();
+        } elseif ($typeName == "float") { return Type::float();
+        } else { return Type::string(); }
     }
 
     /**
@@ -229,5 +247,48 @@ class SchemaGenerator {
             }
             return $this->createdTypes[$typeName];
         }
+    }
+
+    /**
+     * TODO: right now, only the external "layer" of the fields gets translated
+     *  from ObjectType to InputObjectType... meaning that arguments are injected
+     *  correctly only on scalar types (that do not require translation) but not in
+     *  nested ObjectTypes
+     * @param $field
+     * @return Type
+     * @throws ReflectionException
+     */
+    protected function detectInputTypeFromField(Type $field): Type {
+        if ($field instanceof ScalarType) return $field;
+        if ($field instanceof ListOfType) return $this->detectInputTypeFromField($field->getOfType());
+
+        $entityDefinition = array_reduce($this->entitiesDefinition, function ($carry, $entityDefinition) use ($field) {
+            return $carry ? $carry : ($entityDefinition["name"] == $field->name ? $entityDefinition : null);
+        });
+        if (!$entityDefinition) return $field;
+        $className = $entityDefinition["class"];
+
+        // TODO: maybe just removing this line solves the problem of
+        //  the nested... or maybe just makes everything crash
+        if (!isset($this->createdTypes[$field->name])) return $field;
+
+        $typeName = $field->name."Input";
+        if (isset($this->createdTypes[$typeName])) return $this->createdTypes[$typeName];
+
+        // Let's create if before handling properties to handle circular references
+        $this->createdTypes[$typeName] = new InputObjectType([
+            'name' => $typeName,
+        ]);
+
+        // Build entity type from properties
+        $entityFields = [];
+        $properties = $this->propertyInfo->getProperties($className);
+        foreach ($properties as $entityProperty) {
+            $entityPropertyType = $this->propertyInfo->getTypes($className, $entityProperty)[0];
+            $entityPropertyField = self::detectPropertyType($entityPropertyType);
+            $entityFields[$entityProperty] = $entityPropertyField;
+        }
+        $this->createdTypes[$typeName]->config["fields"] = $entityFields;
+        return $this->createdTypes[$typeName];
     }
 }
