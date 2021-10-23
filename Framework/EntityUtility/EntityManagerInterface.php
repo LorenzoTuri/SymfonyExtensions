@@ -73,4 +73,19 @@ interface EntityManagerInterface {
         array $requestContent,
         bool $removeAuthorizationCheck = false
     ): mixed;
+
+
+    /**
+     * Return numer of entities in this page
+     * @param $requestContent
+     * @return int
+     */
+    function detectLimit($requestContent): int;
+
+    /**
+     * Return page to be loaded. Entities are filtered by offset = limit*page, limit = limit
+     * @param $requestContent
+     * @return int
+     */
+    function detectPage($requestContent): int;
 }

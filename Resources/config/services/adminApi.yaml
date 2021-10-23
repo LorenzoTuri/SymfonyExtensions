@@ -1,0 +1,15 @@
+services:
+  Lturi\SymfonyExtensions\AdminApi\Security\AdminAuthenticator:
+    arguments:
+      - '@doctrine.orm.entity_manager'
+      - '@Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface'
+    tags:
+      #- { 'channel': 'security'}
+
+  Lturi\SymfonyExtensions\AdminApi\Controller\AdminApiController:
+    arguments:
+      - "@service_container"
+      - '@Lturi\SymfonyExtensions\AdminApi\Security\AdminAuthenticator'
+      - '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
+    tags:
+      - { name: controller.service_arguments }

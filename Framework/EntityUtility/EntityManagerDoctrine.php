@@ -2,12 +2,15 @@
 
 namespace Lturi\SymfonyExtensions\Framework\EntityUtility;
 
+use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Expr\Comparison;
 use Doctrine\Common\Collections\Expr\CompositeExpression;
 use Doctrine\Common\Collections\Expr\Value;
 use Doctrine\ORM\LazyCriteriaCollection;
+use Lturi\SymfonyExtensions\Framework\EntityUtility\Annotation\FilterFulltext;
 use Lturi\SymfonyExtensions\Framework\Event\EntityManagerDeleteEventPostFilter;
 use Lturi\SymfonyExtensions\Framework\Event\EntityManagerDeleteEventPreFilter;
 use Lturi\SymfonyExtensions\Framework\Event\EntityManagerGetEventPostFilter;
@@ -16,6 +19,8 @@ use Lturi\SymfonyExtensions\Framework\Event\EntityManagerListEventPostFilter;
 use Lturi\SymfonyExtensions\Framework\Event\EntityManagerListEventPreFilter;
 use Lturi\SymfonyExtensions\Framework\Event\EntityManagerSaveEventPostFilter;
 use Lturi\SymfonyExtensions\Framework\Event\EntityManagerSaveEventPreFilter;
+use Lturi\SymfonyExtensions\Framework\Exception\EntityIdNotFoundException;
+use Lturi\SymfonyExtensions\Framework\Exception\EntityNotFoundException;
 use Lturi\SymfonyExtensions\Framework\Exception\EntityValidationException;
 use Lturi\SymfonyExtensions\Framework\Exception\UnauthorizedUserException;
 use Lturi\SymfonyExtensions\Framework\Exception\UnrecognizableFilterException;
@@ -37,11 +42,15 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 // TODO: hei i write here but...  implements fucking traits, and support most used...
 // TODO: and... what about cache??
 class EntityManagerDoctrine implements EntityManagerInterface {
+    const PARAMETER_CRITERIA = "CRITERIA";
+
     protected $entityManager;
     protected $eventDispatcher;
     protected $validator;
     protected $entityDataValidator;
 
+    protected $propertyInfoExtractor;
+    protected $docReader;
     protected $serializer;
 
     public function __construct(
@@ -60,7 +69,11 @@ class EntityManagerDoctrine implements EntityManagerInterface {
                 return spl_object_hash($object);
             },
         ];
-        $extractor = new PropertyInfoExtractor([], [new PhpDocExtractor(), new ReflectionExtractor()]);
+        $this->propertyInfoExtractor = new PropertyInfoExtractor(
+            [new ReflectionExtractor(), new PhpDocExtractor()],
+            [new PhpDocExtractor(), new ReflectionExtractor()]
+        );
+        $this->docReader = new AnnotationReader();
         $normalizers = [
             new EntityNormalizer(
                 $this->entityManager
@@ -68,7 +81,7 @@ class EntityManagerDoctrine implements EntityManagerInterface {
             new GetSetMethodNormalizer(
                 null,
                 null,
-                $extractor,
+                $this->propertyInfoExtractor,
                 null,
                 null,
                 $defaultContext
@@ -97,6 +110,7 @@ class EntityManagerDoctrine implements EntityManagerInterface {
         mixed $id,
         bool $removeAuthorizationCheck = false
     ): mixed {
+        /** @var EntityManagerGetEventPreFilter $eventData */
         $eventData = $this->eventDispatcher->dispatch(new EntityManagerGetEventPreFilter(
             $parameterBag,
             $type,
@@ -114,6 +128,9 @@ class EntityManagerDoctrine implements EntityManagerInterface {
             )
         ));
 
+        if (!$eventData->isAuthorized()) {
+            throw new UnauthorizedUserException();
+        }
         $entityData =  $this->entityManager->getRepository($eventData->getType())->find($eventData->getId());
 
         $eventData = $this->eventDispatcher->dispatch(new EntityManagerGetEventPostFilter(
@@ -121,6 +138,11 @@ class EntityManagerDoctrine implements EntityManagerInterface {
             $type,
             $entityData
         ));
+
+        if (!$eventData->getEntityData()) {
+            throw new EntityIdNotFoundException($id);
+        }
+
         return $eventData->getEntityData();
     }
 
@@ -160,9 +182,11 @@ class EntityManagerDoctrine implements EntityManagerInterface {
             )
         ));
 
-        $criteria = $this->buildCriteria($eventData->getParameterBag(), $eventData->getRequestContent());
+        $criteria = $this->buildCriteria($eventData->getParameterBag(), $eventData->getRequestContent(), $type);
         $entityRepository = $this->entityManager->getRepository($eventData->getType());
-        $matchingEntities = $entityRepository->matching($criteria);
+        //$matchingEntities = $entityRepository->matching($criteria);
+        $query = $entityRepository->createQueryBuilder($entityName)->addCriteria($criteria);
+        $matchingEntities = new ArrayCollection($query->getQuery()->getResult());
 
         $eventData = $this->eventDispatcher->dispatch(new EntityManagerListEventPostFilter(
             $parameterBag,
@@ -290,18 +314,37 @@ class EntityManagerDoctrine implements EntityManagerInterface {
 
     /**
      * @param $requestContent
+     * @return int
+     */
+    public function detectLimit($requestContent): int {
+        return isset($requestContent["limit"]) ? (int)$requestContent["limit"] : 10;
+    }
+
+    /**
+     * @param $requestContent
+     * @return int
+     */
+    public function detectPage($requestContent): int {
+        return isset($requestContent["page"]) ? (int)$requestContent["page"] : 0;
+    }
+
+    /**
+     * @param $requestContent
      * @param ParameterBagInterface $request
      * @return Criteria
      * @throws UnrecognizableFilterException
      */
-    private function buildCriteria(ParameterBagInterface $request, $requestContent): Criteria
-    {
-        $limit = isset($requestContent["limit"]) ? (int)$requestContent["limit"] : 10;
-        $page = isset($requestContent["page"]) ? (int)$requestContent["page"] : 0;
+    private function buildCriteria(
+        ParameterBagInterface $request,
+        $requestContent,
+        string $type
+    ): Criteria {
+        $limit = $this->detectLimit($requestContent);
+        $page = $this->detectPage($requestContent);
         $filters = isset($requestContent["filters"]) ? $requestContent["filters"] : [];
 
-        if ($request->has("CRITERIA")) {
-            $criteria = $request->get("CRITERIA");
+        if ($request->has(self::PARAMETER_CRITERIA)) {
+            $criteria = $request->get(self::PARAMETER_CRITERIA);
         } else {
             // TODO: limit and page default values should be configurable by yaml files
             $criteria = new Criteria();
@@ -311,7 +354,7 @@ class EntityManagerDoctrine implements EntityManagerInterface {
 
         if ($filters) {
             foreach ($filters as $filter) {
-                $comparison = $this->buildFilterExpression($filter);
+                $comparison = $this->buildFilterExpression($filter, $type);
                 $criteria->andWhere($comparison);
             }
         }
@@ -332,44 +375,57 @@ class EntityManagerDoctrine implements EntityManagerInterface {
      * @return Comparison|CompositeExpression|null
      * @throws UnrecognizableFilterException
      */
-    private function buildFilterExpression($filter): CompositeExpression|Comparison|null
+    private function buildFilterExpression($filter, string $entityType = null): CompositeExpression|Comparison|null
     {
         if (!$filter) return null;
         $field = isset($filter["field"]) ? $filter["field"] : "";
         $value = isset($filter["value"]) ? $filter["value"] : null;
         $type = isset($filter["type"]) ? $filter["type"] : "equals";
 
-        if ($type === "and") {
-            return new CompositeExpression(CompositeExpression::TYPE_AND, array_map(function ($single) {
-                return $this->buildFilterExpression($single);
-            }, $value));
-        } else if ($type === "or") {
-            return new CompositeExpression(CompositeExpression::TYPE_OR, array_map(function ($single) {
-                return $this->buildFilterExpression($single);
-            }, $value));
-        } else {
-            $comparison = null;
-            switch ($type) {
-                case "equals": $comparison = Comparison::EQ; break;
-                case "isNull": $comparison = Comparison::EQ; $value = null; break;
-                case "notEquals": $comparison = Comparison::NEQ; break;
-                case "notNull": $comparison = Comparison::NEQ; $value = null; break;
+        $comparison = null;
+        switch ($type) {
+            case "equals": $comparison = Comparison::EQ; break;
+            case "isNull": $comparison = Comparison::EQ; $value = null; break;
+            case "notEquals": $comparison = Comparison::NEQ; break;
+            case "notNull": $comparison = Comparison::NEQ; $value = null; break;
 
-                case "startsWith": $comparison = Comparison::STARTS_WITH; break;
-                case "endsWith": $comparison = Comparison::ENDS_WITH; break;
-                case "greater": $comparison = Comparison::GT; break;
-                case "greaterEquals": $comparison = Comparison::GTE; break;
-                case "lower": $comparison = Comparison::LT; break;
-                case "lowerEquals": $comparison = Comparison::LTE; break;
+            case "startsWith": $comparison = Comparison::STARTS_WITH; break;
+            case "endsWith": $comparison = Comparison::ENDS_WITH; break;
+            case "greater": $comparison = Comparison::GT; break;
+            case "greaterEquals": $comparison = Comparison::GTE; break;
+            case "lower": $comparison = Comparison::LT; break;
+            case "lowerEquals": $comparison = Comparison::LTE; break;
 
-                case "like":
-                case "contains": $comparison = Comparison::CONTAINS; break;
-                case "in": $comparison = Comparison::IN; break;
-                case "notIn": $comparison = Comparison::NIN; break;
+            case "like":
+            case "contains": $comparison = Comparison::CONTAINS; break;
+            case "in": $comparison = Comparison::IN; break;
+            case "notIn": $comparison = Comparison::NIN; break;
 
-                default: throw new UnrecognizableFilterException($type);
-            }
-            return new Comparison($field, $comparison, new Value($value));
+            // Complicated expressions, doesn't follow completely switch behaviour
+            case "and":
+                return new CompositeExpression(CompositeExpression::TYPE_AND, array_map(function ($single) use ($entityType) {
+                    return $this->buildFilterExpression($single, $entityType);
+                }, $value));
+            case "or":
+                return new CompositeExpression(CompositeExpression::TYPE_OR, array_map(function ($single) use ($entityType) {
+                    return $this->buildFilterExpression($single, $entityType);
+                }, $value));
+            case "fulltext":
+                $properties = $this->propertyInfoExtractor->getProperties($entityType);
+                if ($properties) {
+                    $filterableProperties = [];
+                    foreach ($properties as $property) {
+                        $reflector = new \ReflectionProperty($entityType, $property);
+                        $annotation = $this->docReader->getPropertyAnnotation($reflector, FilterFulltext::class);
+                        if ($annotation) $filterableProperties[] = $property;
+                    }
+                    return new CompositeExpression(CompositeExpression::TYPE_OR, array_map(function ($field) use ($value) {
+                        return new Comparison($field, Comparison::CONTAINS, new Value($value));
+                    }, $filterableProperties));
+                }
+
+            default: throw new UnrecognizableFilterException($type);
         }
+        return new Comparison($field, $comparison, new Value($value));
     }
 }

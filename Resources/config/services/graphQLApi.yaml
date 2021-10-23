@@ -3,7 +3,7 @@ services:
     public: true
     autowire: true
     arguments:
-      - '%commandApiEntities%'
+      - '%graphQLApiEntities%'
       - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntitiesDescriptor'
       - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntityManagerInterface'
       - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntityDataValidator'

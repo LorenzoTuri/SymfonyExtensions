@@ -2,3 +2,13 @@
 jsonapi_v1_info:
   path: /api/v1/_info.json
   controller: Lturi\SymfonyExtensions\JsonApi\Controller\InfoController::info
+
+
+lturi_symfonyextensions_adminapi_page:
+  path: /entity-admin
+  controller: Lturi\SymfonyExtensions\AdminApi\Controller\AdminApiController::page
+lturi_symfonyextensions_adminapi_loginlogout:
+  path: /entity-admin/{action}
+  controller: Lturi\SymfonyExtensions\AdminApi\Controller\AdminApiController::loginLogout
+  requirements:
+    action: login|logout

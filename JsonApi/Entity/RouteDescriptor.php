@@ -3,7 +3,7 @@
 namespace Lturi\SymfonyExtensions\JsonApi\Entity;
 
 use Lturi\SymfonyExtensions\Framework\Constants;
-use Lturi\SymfonyExtensions\JsonApi\Controller\JsonapiController;
+use Lturi\SymfonyExtensions\JsonApi\Controller\RestApiController;
 use Lturi\SymfonyExtensions\Rest\ViewModel\EntityPropertyViewModel;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
@@ -174,7 +174,7 @@ class RouteDescriptor {
     }
     private function generateEntityRelationParams($entity, $property, $version, $suffix) {
         return [
-            '_controller' => JsonapiController::class."::".$suffix."Relation",
+            '_controller' => RestApiController::class."::".$suffix."Relation",
             'entity' => $entity["name"],
             'relatedEntity' => $property->getType(),
             'version' => $version,

@@ -35,10 +35,11 @@ class SuperAdminVoter extends Voter implements VoterInterface{
      * @param AccessDecisionManagerInterface $accessDecisionManager
      */
     public function __construct(
-        AccessDecisionManagerInterface $accessDecisionManager
+        iterable $voters = [],
+        string $strategy = self::STRATEGY_AFFIRMATIVE
     ) {
-        $this->voters = $accessDecisionManager->getVoters();
-        $this->strategy = $accessDecisionManager->getStrategy();
+        $this->voters = $voters;
+        $this->strategy = $strategy;
     }
 
     protected function supports(string $attribute, $subject): bool
@@ -54,7 +55,6 @@ class SuperAdminVoter extends Voter implements VoterInterface{
                         !$voter instanceof SuperAdminVoter &&
                         $voter->supports($attribute, $subject)
                     ) $carry++;
-                    dump($voter->supports($attribute, $subject));
                 }
                 return $carry;
             },

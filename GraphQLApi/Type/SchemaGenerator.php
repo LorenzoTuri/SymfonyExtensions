@@ -20,6 +20,7 @@ use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
 // TODO: cache???
 // TODO: save schema as textual version, the return the textual version loaded. useful for caching and also to remove
 //  unnecessary problems related to my ObjectTypes... let graphQL handle the object creation, not my code.
+//  -> if possible with callbacks
 class SchemaGenerator {
     protected $entitiesDefinition;
     protected $createdTypes = [];

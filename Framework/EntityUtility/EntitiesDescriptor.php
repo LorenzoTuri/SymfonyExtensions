@@ -9,6 +9,7 @@ use Lturi\SymfonyExtensions\Framework\EntityUtility\Annotation\Entity;
 use Lturi\SymfonyExtensions\JsonApi\Controller\JsonapiController;
 use Lturi\SymfonyExtensions\Rest\ViewModel\EntityPropertyViewModel;
 use Lturi\SymfonyExtensions\Rest\ViewModel\EntityViewModel;
+use Lturi\SymfonyExtensions\RestApi\Controller\RestApiController;
 use Psr\Cache\InvalidArgumentException;
 use ReflectionClass;
 use ReflectionException;
@@ -55,7 +56,9 @@ class EntitiesDescriptor extends AbstractEntitiesDescriptor {
             $entityConfig["class"] = $type;
             $entityConfig["name"] = $entityDescription->name ?? u($type)->camel()->toString();
             $entityConfig["path"] = str_replace("_", "-", $entityDescription->path ?? u($type)->snake()->toString());
+            // TODO: json-controller, not controller...
             $entityConfig["controller"] = $entityDescription->controller ?? JsonapiController::class;
+            $entityConfig["rest-controller"] = $entityDescription->controller ?? RestApiController::class;
             $entityConfig["versions"] = $entityDescription->versions ?? ['v1'];
             return $entityConfig;
         } catch (Exception $exception) {

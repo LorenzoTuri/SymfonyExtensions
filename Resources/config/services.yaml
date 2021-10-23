@@ -2,8 +2,10 @@ imports:
   - { resource: services/classes.yaml }
   - { resource: services/services.yaml }
   - { resource: services/controllers.yaml }
+  - { resource: services/adminApi.yaml }
   - { resource: services/commandApi.yaml }
   - { resource: services/graphQLApi.yaml }
+  - { resource: services/restApi.yaml }
 
 services:
   # Better manage of symfony exceptions, display errors with better graphic (prod) and different ways, example jsons
@@ -39,6 +41,7 @@ services:
   Lturi\SymfonyExtensions\Framework\EntityUtility\Voter\SuperAdminVoter:
     public: true
     arguments:
-      - '@security.access.decision_manager'
+      - !tagged_iterator security.voter
+      - 'access_decision_manager.strategy'
     tags:
       - { name: security.voter }

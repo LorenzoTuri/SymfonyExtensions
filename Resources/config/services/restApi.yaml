@@ -1,0 +1,16 @@
+services:
+  Lturi\SymfonyExtensions\RestApi\Controller\RestApiController:
+    public: true
+    autowire: true
+    arguments:
+      - '%restApiEntities%'
+      - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntitiesDescriptor'
+      - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntityManagerInterface'
+      - '@Lturi\SymfonyExtensions\Framework\EntityUtility\EntityDataValidator'
+      - '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
+    tags:
+      - { name: controller.service_arguments }
+
+  Lturi\SymfonyExtensions\RestApi\Entity\RouteDescriptor:
+    public: true
+    autowire: true

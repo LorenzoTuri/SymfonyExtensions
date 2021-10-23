@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "declaration": true,
+    "strict": true,
+    "lib": [
+      "es6"
+    ],
+    "experimentalDecorators": true
+  },
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "strict": true,
+    "jsx": "preserve",
+    "importHelpers": true,
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "noImplicitThis": true,
+    "noImplicitAny": true,
+    "strictPropertyInitialization": true,
+    "allowSyntheticDefaultImports": true,
+    "strictNullChecks": true,
+  },
+  "include": [
+    "Resources/assets/**/*.ts",
+    "Resources/assets/**/*.tsx",
+    "Resources/assets/**/*.vue",
+    "Resources/assets/**/*.ts",
+    "Resources/assets/**/*.tsx",
+    "Resources/assets/**/*.html"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

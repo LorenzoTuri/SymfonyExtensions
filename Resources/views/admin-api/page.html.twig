@@ -1,0 +1,19 @@
+<html>
+    <head>
+        <title>Entities Administrator!</title>
+        {% block stylesheets %}
+            <link href="{{ asset('bundles/lturisymfonyextensions/index.css') }}" rel="stylesheet">
+        {% endblock %}
+    </head>
+    <body>
+        <div>
+            <div id="application" :user="{{{
+                    "username": user.username
+                }|json_encode }}">
+            </div>
+        </div>
+        {% block javascripts %}
+            <script src="{{ asset('bundles/lturisymfonyextensions/index.bundle.js') }}"></script>
+        {% endblock %}
+    </body>
+</html>

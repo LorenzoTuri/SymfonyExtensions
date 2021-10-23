@@ -6,8 +6,8 @@ use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Exception;
-use Lturi\SymfonyExtensions\Framework\EntityUtility\Trait\TimestampedEntity;
-use Lturi\SymfonyExtensions\Framework\EntityUtility\Trait\UlidIdentifiedEntity;
+use Lturi\SymfonyExtensions\Framework\EntityUtility\Traits\TimestampedEntity;
+use Lturi\SymfonyExtensions\Framework\EntityUtility\Traits\UlidIdentifiedEntity;
 use Lturi\SymfonyExtensions\Framework\Validators\SafeString;
 use Symfony\Bridge\Doctrine\IdGenerator\UlidGenerator;
 use Symfony\Component\Uid\Ulid;
@@ -15,7 +15,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * @ORM\Entity
+ * @ORM\MappedSuperclass
  * @ORM\HasLifecycleCallbacks
  */
 class UserApiToken

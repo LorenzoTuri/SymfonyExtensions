@@ -15,9 +15,9 @@
                 <a class="btn btn-primary" href="/">HOME</a>
             </div>
         </div>
-        {% if app.environment != "prod" %}
+        {% if app.environment == "dev" %}
         <div class="row">
-            {{ dump(exception) }}
+            {{ dump() }}
         </div>
         {% endif %}
     </div>

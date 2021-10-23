@@ -8,6 +8,7 @@ use Lturi\SymfonyExtensions\Framework\Controller\RoutesController;
 use Lturi\SymfonyExtensions\Framework\Controller\TranslationController;
 use Lturi\SymfonyExtensions\GraphQLApi\Entity\RouteDescriptor as GraphQLRouteDescriptor;
 use Lturi\SymfonyExtensions\JsonApi\Entity\RouteDescriptor as JsonApiRouteDescriptor;
+use Lturi\SymfonyExtensions\RestApi\Entity\RouteDescriptor as RestApiRouteDescriptor;
 use Psr\Cache\InvalidArgumentException;
 use ReflectionException;
 use Symfony\Component\Config\Loader\Loader;
@@ -21,17 +22,20 @@ class RouteLoader extends Loader
     protected $entityDescriptor;
     protected $jsonApiRouteDescriptor;
     protected $graphQLRouteDescriptor;
+    protected $restApiRouteDescriptor;
 
     public function __construct (
         ContainerInterface $container,
         EntitiesDescriptor $entitiesDescriptor,
         JsonApiRouteDescriptor $jsonApiRouteDescriptor,
-        GraphQLRouteDescriptor $graphQLRouteDescriptor
+        GraphQLRouteDescriptor $graphQLRouteDescriptor,
+        RestApiRouteDescriptor $restApiRouteDescriptor
     ) {
         $this->container = $container;
         $this->entityDescriptor = $entitiesDescriptor;
         $this->jsonApiRouteDescriptor = $jsonApiRouteDescriptor;
         $this->graphQLRouteDescriptor = $graphQLRouteDescriptor;
+        $this->restApiRouteDescriptor = $restApiRouteDescriptor;
     }
 
     /**
@@ -70,12 +74,19 @@ class RouteLoader extends Loader
                 )
             );
         }
+        // Json api routes
         $entities = $this->container->getParameter("jsonApiEntities");
         $entitiesDescription = $this->entityDescriptor->describe("cachedJsonApiEntities", $entities);
         $entityRoutes = $this->jsonApiRouteDescriptor->describe($entities, $entitiesDescription);
         $routes->addCollection($entityRoutes);
 
+        // Graph QL api routes
         $entityRoutes = $this->graphQLRouteDescriptor->describe();
+        $routes->addCollection($entityRoutes);
+
+        // Rest api routes
+        $entities = $this->container->getParameter("restApiEntities");
+        $entityRoutes = $this->restApiRouteDescriptor->describe($entities);
         $routes->addCollection($entityRoutes);
 
         // TODO: move some of the default routes to the routes.yaml
