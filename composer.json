@@ -12,7 +12,7 @@
 			"Lturi\\SymfonyExtensions\\": "/"
 		}
 	},
-	"version": "1.0.0",
+	"version": "dev-full",
 	"minimum-stability": "stable",
 	"require": {
 		"php": ">=7.3",
